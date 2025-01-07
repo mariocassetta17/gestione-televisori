@@ -57,33 +57,23 @@
       color: #1f1f1f;
     }
 
-    #modal, #addModal, #screenModal, #columnModal, #otherModal {
+    .modal {
       display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
       background-color: #1f1f1f;
       border: 1px solid #ffffff;
       padding: 20px;
-      z-index: 1000;
+      margin-top: 20px;
       text-align: center;
     }
 
-    #modal input, #addModal input, #columnModal input, #otherModal input {
+    .modal input {
       margin: 10px 0;
     }
 
-    #overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-      z-index: 999;
+    .modal.active {
+      display: block;
     }
+
   </style>
 </head>
 <body>
@@ -101,24 +91,27 @@
   <div id="stations"></div>
 </div>
 
-<div id="modal">
+<!-- Modale per eliminazione -->
+<div id="deleteModal" class="modal">
   <h2>Conferma Eliminazione</h2>
   <p>Inserisci la password per confermare:</p>
   <input type="password" id="deletePassword" placeholder="Password">
   <p id="deleteError" class="error" style="display: none;">Password errata</p>
   <button onclick="confirmDelete()">Conferma</button>
-  <button onclick="closeModal()">Annulla</button>
+  <button onclick="closeModal('deleteModal')">Annulla</button>
 </div>
 
-<div id="addModal">
+<!-- Modale per aggiungere una nuova stazione -->
+<div id="addModal" class="modal">
   <h2>Aggiungi Stazione di Servizio</h2>
   <p>Inserisci il codice della sede:</p>
   <input type="text" id="addStationCode" placeholder="Codice sede">
   <button onclick="confirmAddStation()">Aggiungi</button>
-  <button onclick="closeAddModal()">Annulla</button>
+  <button onclick="closeModal('addModal')">Annulla</button>
 </div>
 
-<div id="screenModal">
+<!-- Modale per configurare un nuovo schermo -->
+<div id="screenModal" class="modal">
   <h2>Aggiungi Schermo</h2>
   <p>Seleziona la posizione dello schermo:</p>
   <select id="screenPosition">
@@ -126,27 +119,27 @@
     <option value="Altro">Altro</option>
   </select>
   <button onclick="confirmScreenPosition()">Continua</button>
-  <button onclick="closeScreenModal()">Annulla</button>
+  <button onclick="closeModal('screenModal')">Annulla</button>
 </div>
 
-<div id="columnModal">
+<!-- Modale per configurare uno schermo in colonna -->
+<div id="columnModal" class="modal">
   <h2>Configura Schermo in Colonna</h2>
   <p>Numeri erogatori:</p>
   <input type="number" id="pump1" placeholder="Erogatore 1">
   <input type="number" id="pump2" placeholder="Erogatore 2">
   <button onclick="confirmColumnScreen()">Aggiungi</button>
-  <button onclick="closeColumnModal()">Annulla</button>
+  <button onclick="closeModal('columnModal')">Annulla</button>
 </div>
 
-<div id="otherModal">
+<!-- Modale per configurare uno schermo in altro -->
+<div id="otherModal" class="modal">
   <h2>Configura Schermo in Altro</h2>
   <p>Posizione dello schermo:</p>
   <input type="text" id="screenOtherPosition" placeholder="Posizione">
   <button onclick="confirmOtherScreen()">Aggiungi</button>
-  <button onclick="closeOtherModal()">Annulla</button>
+  <button onclick="closeModal('otherModal')">Annulla</button>
 </div>
-
-<div id="overlay"></div>
 
 <script>
   const correctPassword = 'cassetta2';
@@ -182,7 +175,7 @@
 
       const deleteButton = document.createElement('button');
       deleteButton.textContent = 'Elimina Stazione';
-      deleteButton.onclick = () => openModal(index);
+      deleteButton.onclick = () => openModal('deleteModal', index);
 
       stationElement.appendChild(addScreenButton);
       stationElement.appendChild(deleteButton);
@@ -206,21 +199,18 @@
   }
 
   function openAddModal() {
-    document.getElementById('addModal').style.display = 'block';
-    document.getElementById('overlay').style.display = 'block';
+    document.getElementById('addModal').classList.add('active');
   }
 
-  function closeAddModal() {
-    document.getElementById('addModal').style.display = 'none';
-    document.getElementById('overlay').style.display = 'none';
-    document.getElementById('addStationCode').value = '';
+  function closeModal(modalId) {
+    document.getElementById(modalId).classList.remove('active');
   }
 
   function confirmAddStation() {
     const stationCode = document.getElementById('addStationCode').value;
     if (stationCode) {
       addStation(stationCode);
-      closeAddModal();
+      closeModal('addModal');
     } else {
       alert('Codice della sede non inserito.');
     }
@@ -235,19 +225,13 @@
 
   function openScreenModal(index) {
     stationForScreen = index;
-    document.getElementById('screenModal').style.display = 'block';
-    document.getElementById('overlay').style.display = 'block';
-  }
-
-  function closeScreenModal() {
-    document.getElementById('screenModal').style.display = 'none';
-    document.getElementById('overlay').style.display = 'none';
+    document.getElementById('screenModal').classList.add('active');
   }
 
   function confirmScreenPosition() {
     const position = document.getElementById('screenPosition').value;
     const screenCode = generateRandomCode();
-    closeScreenModal();
+    closeModal('screenModal');
     addScreen({ position, code: screenCode });
   }
 
@@ -258,17 +242,11 @@
     loadStations();
   }
 
-  function openModal(index) {
+  function openModal(modalId, index) {
     stationToDelete = index;
-    document.getElementById('modal').style.display = 'block';
-    document.getElementById('overlay').style.display = 'block';
+    document.getElementById(modalId).classList.add('active');
     document.getElementById('deletePassword').value = '';
     document.getElementById('deleteError').style.display = 'none';
-  }
-
-  function closeModal() {
-    document.getElementById('modal').style.display = 'none';
-    document.getElementById('overlay').style.display = 'none';
   }
 
   function confirmDelete() {
@@ -276,7 +254,7 @@
     const deleteError = document.getElementById('deleteError');
     if (inputPassword === deletePassword) {
       deleteStation();
-      closeModal();
+      closeModal('deleteModal');
     } else {
       deleteError.style.display = 'block';
     }
