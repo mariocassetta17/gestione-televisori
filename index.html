@@ -114,31 +114,24 @@
 <div id="screenModal" class="modal">
   <h2>Aggiungi Schermo</h2>
   <p>Seleziona la posizione dello schermo:</p>
-  <select id="screenPosition">
+  <select id="screenPosition" onchange="handlePositionChange()">
     <option value="Colonna">Colonna</option>
     <option value="Altro">Altro</option>
   </select>
+  
+  <div id="columnFields" style="display: none;">
+    <p>Inserisci i numeri degli erogatori:</p>
+    <input type="number" id="pump1" placeholder="Erogatore 1">
+    <input type="number" id="pump2" placeholder="Erogatore 2">
+  </div>
+
+  <div id="otherFields" style="display: none;">
+    <p>Posizione dello schermo:</p>
+    <input type="text" id="screenOtherPosition" placeholder="Posizione">
+  </div>
+
   <button onclick="confirmScreenPosition()">Continua</button>
   <button onclick="closeModal('screenModal')">Annulla</button>
-</div>
-
-<!-- Modale per configurare uno schermo in colonna -->
-<div id="columnModal" class="modal">
-  <h2>Configura Schermo in Colonna</h2>
-  <p>Numeri erogatori:</p>
-  <input type="number" id="pump1" placeholder="Erogatore 1">
-  <input type="number" id="pump2" placeholder="Erogatore 2">
-  <button onclick="confirmColumnScreen()">Aggiungi</button>
-  <button onclick="closeModal('columnModal')">Annulla</button>
-</div>
-
-<!-- Modale per configurare uno schermo in altro -->
-<div id="otherModal" class="modal">
-  <h2>Configura Schermo in Altro</h2>
-  <p>Posizione dello schermo:</p>
-  <input type="text" id="screenOtherPosition" placeholder="Posizione">
-  <button onclick="confirmOtherScreen()">Aggiungi</button>
-  <button onclick="closeModal('otherModal')">Annulla</button>
 </div>
 
 <script>
@@ -228,41 +221,47 @@
     document.getElementById('screenModal').classList.add('active');
   }
 
+  function handlePositionChange() {
+    const position = document.getElementById('screenPosition').value;
+    if (position === "Colonna") {
+      document.getElementById('columnFields').style.display = 'block';
+      document.getElementById('otherFields').style.display = 'none';
+    } else {
+      document.getElementById('columnFields').style.display = 'none';
+      document.getElementById('otherFields').style.display = 'block';
+    }
+  }
+
   function confirmScreenPosition() {
     const position = document.getElementById('screenPosition').value;
     const screenCode = generateRandomCode();
-    closeModal('screenModal');
-    addScreen({ position, code: screenCode });
+    let screen = { position, code: screenCode };
+
+    if (position === "Colonna") {
+      const pump1 = document.getElementById('pump1').value;
+      const pump2 = document.getElementById('pump2').value;
+      if (pump1 && pump2) {
+        screen.pumps = [pump1, pump2];
+        addScreen(screen);
+        closeModal('screenModal');
+      } else {
+        alert('Inserisci i numeri degli erogatori.');
+      }
+    } else if (position === "Altro") {
+      const screenOtherPosition = document.getElementById('screenOtherPosition').value;
+      if (screenOtherPosition) {
+        screen.positionDetails = screenOtherPosition;
+        addScreen(screen);
+        closeModal('screenModal');
+      } else {
+        alert('Inserisci la posizione dello schermo.');
+      }
+    }
   }
 
   function addScreen(screen) {
     const stations = JSON.parse(localStorage.getItem('stations')) || [];
     stations[stationForScreen].screens.push(screen);
-    localStorage.setItem('stations', JSON.stringify(stations));
-    loadStations();
-  }
-
-  function openModal(modalId, index) {
-    stationToDelete = index;
-    document.getElementById(modalId).classList.add('active');
-    document.getElementById('deletePassword').value = '';
-    document.getElementById('deleteError').style.display = 'none';
-  }
-
-  function confirmDelete() {
-    const inputPassword = document.getElementById('deletePassword').value;
-    const deleteError = document.getElementById('deleteError');
-    if (inputPassword === deletePassword) {
-      deleteStation();
-      closeModal('deleteModal');
-    } else {
-      deleteError.style.display = 'block';
-    }
-  }
-
-  function deleteStation() {
-    const stations = JSON.parse(localStorage.getItem('stations')) || [];
-    stations.splice(stationToDelete, 1);
     localStorage.setItem('stations', JSON.stringify(stations));
     loadStations();
   }
