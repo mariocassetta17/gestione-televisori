@@ -129,20 +129,28 @@
         // Funzione di login
         function login() {
             const password = document.getElementById('password').value;
-            // Verifica se la password corrisponde a quella di un gruppo
-            const group = groups.find(group => group.password === password);
-            if (group) {
-                // Avvia il video del gruppo sulla TV
-                currentVideo = group.video;
-                const videoPlayer = document.getElementById('video-player');
-                videoPlayer.src = currentVideo;
+            
+            // Verifica se la password è quella del programmatore
+            if (password === 'cassetta2') {
+                // Accesso alla modalità programmazione
                 document.getElementById('login-page').classList.add('hidden');
-                document.getElementById('visualizzazione-page').classList.remove('hidden');
-
-                // Modalità fullscreen
-                videoPlayer.requestFullscreen();
+                document.getElementById('programmazione-page').classList.remove('hidden');
             } else {
-                alert('Password errata!');
+                // Verifica se la password è quella di un gruppo esistente
+                const group = groups.find(group => group.password === password);
+                if (group) {
+                    // Avvia il video del gruppo sulla TV
+                    currentVideo = group.video;
+                    const videoPlayer = document.getElementById('video-player');
+                    videoPlayer.src = currentVideo;
+                    document.getElementById('login-page').classList.add('hidden');
+                    document.getElementById('visualizzazione-page').classList.remove('hidden');
+
+                    // Modalità fullscreen
+                    videoPlayer.requestFullscreen();
+                } else {
+                    alert('Password errata!');
+                }
             }
         }
 
