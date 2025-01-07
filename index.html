@@ -33,14 +33,18 @@
     #main {
       display: none;
       width: 100%;
-      max-width: 600px;
+      max-width: 800px;
     }
 
     .station {
-      margin: 10px 0;
+      margin: 20px 0;
       padding: 10px;
       border: 1px solid #ffffff;
       border-radius: 5px;
+    }
+
+    .station p {
+      margin: 5px 0;
     }
 
     button {
@@ -59,21 +63,41 @@
 
     .modal {
       display: none;
-      background-color: #1f1f1f;
+      background-color: rgba(0, 0, 0, 0.8);
       border: 1px solid #ffffff;
       padding: 20px;
       margin-top: 20px;
       text-align: center;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 100;
+      width: 300px;
+      border-radius: 10px;
     }
 
     .modal input {
       margin: 10px 0;
+      padding: 10px;
+      width: 80%;
+      background-color: #333;
+      border: none;
+      color: #fff;
+      border-radius: 5px;
     }
 
     .modal.active {
       display: block;
     }
 
+    .modal button {
+      margin-top: 10px;
+    }
+
+    .modal button:hover {
+      background-color: #ff4b4b;
+    }
   </style>
 </head>
 <body>
@@ -134,11 +158,32 @@
   <button onclick="closeModal('screenModal')">Annulla</button>
 </div>
 
+<!-- Modale per modificare schermo -->
+<div id="screenSettingsModal" class="modal">
+  <h2>Modifica Schermo</h2>
+  <p>Modifica i dati dello schermo:</p>
+  <input type="text" id="screenCode" placeholder="Codice Schermo">
+  <select id="screenPositionSettings">
+    <option value="Colonna">Colonna</option>
+    <option value="Altro">Altro</option>
+  </select>
+  <div id="columnFieldsSettings" style="display: none;">
+    <input type="number" id="pump1Settings" placeholder="Erogatore 1">
+    <input type="number" id="pump2Settings" placeholder="Erogatore 2">
+  </div>
+  <div id="otherFieldsSettings" style="display: none;">
+    <input type="text" id="screenOtherPositionSettings" placeholder="Posizione">
+  </div>
+  <button onclick="confirmScreenSettings()">Salva Modifiche</button>
+  <button onclick="closeModal('screenSettingsModal')">Annulla</button>
+</div>
+
 <script>
   const correctPassword = 'cassetta2';
   const deletePassword = 'cassetta2025';
   let stationToDelete = null;
   let stationForScreen = null;
+  let screenIndexToEdit = null;
 
   function checkPassword() {
     const inputPassword = document.getElementById('password').value;
@@ -160,7 +205,7 @@
     stations.forEach((station, index) => {
       const stationElement = document.createElement('div');
       stationElement.className = 'station';
-      stationElement.innerHTML = `<p>${station.code}</p>`;
+      stationElement.innerHTML = `<p><strong>${station.code}</strong></p>`;
 
       const addScreenButton = document.createElement('button');
       addScreenButton.textContent = 'Aggiungi Schermo';
@@ -176,9 +221,12 @@
       station.screens.forEach((screen, screenIndex) => {
         const screenElement = document.createElement('div');
         screenElement.innerHTML = `
-          <p>Schermo ${screenIndex + 1}: ${screen.position} (Codice: ${screen.code})</p>
-          <button onclick="assignFileToScreen(${screenIndex})">Assegna MP4</button>
-          <button onclick="openScreenSettings(${screenIndex})">Impostazioni</button>
+          <p><strong>Schermo ${screenIndex + 1}:</strong> Posizione: ${screen.position}, Codice: ${screen.code}</p>
+          ${screen.pumps ? `<p>Erogatori: ${screen.pumps.join(', ')}</p>` : ''}
+          ${screen.positionDetails ? `<p>Posizione Altro: ${screen.positionDetails}</p>` : ''}
+          ${screen.videoFile ? `<p>File Video: Caricato</p>` : ''}
+          <button onclick="assignFileToScreen(${index}, ${screenIndex})">Assegna MP4</button>
+          <button onclick="openScreenSettings(${index}, ${screenIndex})">Impostazioni</button>
         `;
         stationElement.appendChild(screenElement);
       });
@@ -266,7 +314,7 @@
     loadStations();
   }
 
-  function assignFileToScreen(index) {
+  function assignFileToScreen(stationIndex, screenIndex) {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = 'video/mp4';
@@ -276,7 +324,7 @@
         const fileReader = new FileReader();
         fileReader.onload = function() {
           const stations = JSON.parse(localStorage.getItem('stations')) || [];
-          stations[stationForScreen].screens[index].videoFile = fileReader.result;
+          stations[stationIndex].screens[screenIndex].videoFile = fileReader.result;
           localStorage.setItem('stations', JSON.stringify(stations));
           alert('File MP4 assegnato con successo.');
         };
@@ -288,14 +336,66 @@
     fileInput.click();
   }
 
-  function openScreenSettings(index) {
-    const password = prompt("Inserisci la password per accedere alle impostazioni:");
-    if (password === deletePassword) {
-      const stations = JSON.parse(localStorage.getItem('stations')) || [];
-      const screen = stations[stationForScreen].screens[index];
-      alert(`Modifica schermo: ${screen.position} con codice: ${screen.code}`);
+  function openScreenSettings(stationIndex, screenIndex) {
+    screenIndexToEdit = screenIndex;
+    const stations = JSON.parse(localStorage.getItem('stations')) || [];
+    const screen = stations[stationIndex].screens[screenIndex];
+
+    document.getElementById('screenCode').value = screen.code;
+    document.getElementById('screenPositionSettings').value = screen.position;
+    if (screen.position === 'Colonna') {
+      document.getElementById('columnFieldsSettings').style.display = 'block';
+      document.getElementById('otherFieldsSettings').style.display = 'none';
+      document.getElementById('pump1Settings').value = screen.pumps[0];
+      document.getElementById('pump2Settings').value = screen.pumps[1];
     } else {
-      alert('Password errata!');
+      document.getElementById('columnFieldsSettings').style.display = 'none';
+      document.getElementById('otherFieldsSettings').style.display = 'block';
+      document.getElementById('screenOtherPositionSettings').value = screen.positionDetails;
+    }
+    document.getElementById('screenSettingsModal').classList.add('active');
+  }
+
+  function confirmScreenSettings() {
+    const stations = JSON.parse(localStorage.getItem('stations')) || [];
+    const station = stations[stationForScreen];
+    const screen = station.screens[screenIndexToEdit];
+
+    const updatedCode = document.getElementById('screenCode').value;
+    const updatedPosition = document.getElementById('screenPositionSettings').value;
+
+    screen.code = updatedCode;
+    screen.position = updatedPosition;
+
+    if (updatedPosition === "Colonna") {
+      screen.pumps = [
+        document.getElementById('pump1Settings').value,
+        document.getElementById('pump2Settings').value,
+      ];
+    } else {
+      screen.positionDetails = document.getElementById('screenOtherPositionSettings').value;
+    }
+
+    localStorage.setItem('stations', JSON.stringify(stations));
+    loadStations();
+    closeModal('screenSettingsModal');
+  }
+
+  function openModal(modalId, stationIndex) {
+    stationToDelete = stationIndex;
+    document.getElementById(modalId).classList.add('active');
+  }
+
+  function confirmDelete() {
+    const inputPassword = document.getElementById('deletePassword').value;
+    if (inputPassword === deletePassword) {
+      const stations = JSON.parse(localStorage.getItem('stations')) || [];
+      stations.splice(stationToDelete, 1);
+      localStorage.setItem('stations', JSON.stringify(stations));
+      loadStations();
+      closeModal('deleteModal');
+    } else {
+      document.getElementById('deleteError').style.display = 'block';
     }
   }
 </script>
