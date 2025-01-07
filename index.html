@@ -4,7 +4,54 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sito con login e creazione account</title>
-  <link rel="stylesheet" href="styles.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+
+    .container {
+      text-align: center;
+    }
+
+    input {
+      padding: 10px;
+      margin: 10px;
+      border: none;
+      background-color: #333;
+      color: white;
+      border-radius: 5px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #555;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    button:hover {
+      background-color: #777;
+    }
+
+    h1, h2 {
+      color: white;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
@@ -33,6 +80,41 @@
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+    let accounts = []; // Array per memorizzare gli account creati
+    let isLoggedIn = false;
+
+    function login() {
+      const password = document.getElementById("password").value;
+      if (password === "casetta2") {
+        isLoggedIn = true;
+        document.getElementById("loginForm").style.display = "none";
+        document.getElementById("accountForm").style.display = "block";
+        document.getElementById("welcomeMessage").style.display = "block";
+      } else {
+        alert("Password errata!");
+      }
+    }
+
+    function createAccount() {
+      const username = document.getElementById("newUsername").value;
+      const password = document.getElementById("newPassword").value;
+
+      if (username && password) {
+        accounts.push({ username, password });
+        document.getElementById("accountMessage").innerText = `Account ${username} creato con successo!`;
+      } else {
+        alert("Inserisci tutti i campi.");
+      }
+    }
+
+    function logout() {
+      isLoggedIn = false;
+      document.getElementById("loginForm").style.display = "block";
+      document.getElementById("accountForm").style.display = "none";
+      document.getElementById("welcomeMessage").style.display = "none";
+      document.getElementById("password").value = '';
+    }
+  </script>
 </body>
 </html>
