@@ -126,12 +126,16 @@
         const groups = [];
         let currentVideo = '';
 
+        // Funzione di login
         function login() {
             const password = document.getElementById('password').value;
-            if (password === 'televisore123') {
+            // Controllo della password del programmatore
+            if (password === 'cassetta2') {
                 document.getElementById('login-page').classList.add('hidden');
                 document.getElementById('programmazione-page').classList.remove('hidden');
-            } else if (groups.some(group => group.password === password)) {
+            }
+            // Controllo per i televisori
+            else if (groups.some(group => group.password === password)) {
                 const group = groups.find(g => g.password === password);
                 currentVideo = group.video;
                 document.getElementById('login-page').classList.add('hidden');
@@ -143,16 +147,19 @@
             }
         }
 
+        // Funzione per aprire il modale
         function openModal() {
             const modal = document.getElementById("myModal");
             modal.style.display = "block";
         }
 
+        // Funzione per chiudere il modale
         function closeModal() {
             const modal = document.getElementById("myModal");
             modal.style.display = "none";
         }
 
+        // Funzione per creare un nuovo gruppo
         function createGroup() {
             const groupName = document.getElementById('group').value;
             const groupPassword = document.getElementById('group-password').value;
@@ -177,6 +184,7 @@
             reader.readAsDataURL(videoFile); // Carichiamo il video come base64
         }
 
+        // Funzione per visualizzare i gruppi
         function displayGroups() {
             const groupsDiv = document.getElementById('groups');
             groupsDiv.innerHTML = '';
