@@ -1,109 +1,126 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestione Stazioni di Servizio</title>
-    <style>
-        body {
-            background-color: #121212;
-            color: #ffffff;
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
-        .container {
-            text-align: center;
-            width: 90%;
-            max-width: 600px;
-        }
-        button {
-            background-color: #1e88e5;
-            color: #ffffff;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-        button:hover {
-            background-color: #1565c0;
-        }
-        .station {
-            border: 1px solid #ffffff;
-            padding: 20px;
-            margin: 10px 0;
-            border-radius: 10px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestione Stazioni di Servizio</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: #ffffff;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    #login {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    #main {
+      display: none;
+      width: 100%;
+      max-width: 600px;
+    }
+
+    .station {
+      margin: 10px 0;
+      padding: 10px;
+      border: 1px solid #ffffff;
+      border-radius: 5px;
+    }
+
+    button {
+      background-color: #1f1f1f;
+      color: #ffffff;
+      border: 1px solid #ffffff;
+      padding: 10px;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    button:hover {
+      background-color: #ffffff;
+      color: #1f1f1f;
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Accesso</h1>
-        <input type="password" id="password" placeholder="Inserisci la password" />
-        <button onclick="login()">Accedi</button>
-    </div>
 
-    <div class="container" id="dashboard" style="display: none;">
-        <h1>Gestione Stazioni di Servizio</h1>
-        <button onclick="addStation()">Aggiungi Stazione di Servizio</button>
-        <div id="stations"></div>
-    </div>
+<div id="login">
+  <h1>Accedi</h1>
+  <input type="password" id="password" placeholder="Inserisci password">
+  <button onclick="checkPassword()">Entra</button>
+</div>
 
-    <script>
-        // Gestione autenticazione
-        function login() {
-            const password = document.getElementById("password").value;
-            if (password === "cassetta2") {
-                document.querySelector(".container").style.display = "none";
-                document.getElementById("dashboard").style.display = "block";
-                loadStations();
-            } else {
-                alert("Password errata!");
-            }
-        }
+<div id="main">
+  <h1>Gestione Stazioni di Servizio</h1>
+  <button onclick="addStation()">Aggiungi stazione di servizio</button>
+  <div id="stations"></div>
+</div>
 
-        // Salvataggio nel localStorage
-        function saveStations(stations) {
-            localStorage.setItem("stations", JSON.stringify(stations));
-        }
+<script>
+  const correctPassword = 'cassetta2';
 
-        function loadStations() {
-            const stations = JSON.parse(localStorage.getItem("stations")) || [];
-            const stationsContainer = document.getElementById("stations");
-            stationsContainer.innerHTML = "";
-            stations.forEach((station, index) => {
-                const stationDiv = document.createElement("div");
-                stationDiv.className = "station";
-                stationDiv.innerHTML = `
-                    <h2>${station.name}</h2>
-                    <button onclick="addScreen(${index})">Aggiungi Schermo</button>
-                    <ul>
-                        ${station.screens.map(screen => `<li>${screen}</li>`).join("")}
-                    </ul>
-                `;
-                stationsContainer.appendChild(stationDiv);
-            });
-        }
+  function checkPassword() {
+    const inputPassword = document.getElementById('password').value;
+    if (inputPassword === correctPassword) {
+      document.getElementById('login').style.display = 'none';
+      document.getElementById('main').style.display = 'block';
+      loadStations();
+    } else {
+      alert('Password errata');
+    }
+  }
 
-        function addStation() {
-            const stations = JSON.parse(localStorage.getItem("stations")) || [];
-            const newStation = { name: `Stazione ${stations.length + 1}`, screens: [] };
-            stations.push(newStation);
-            saveStations(stations);
-            loadStations();
-        }
+  function loadStations() {
+    const stations = JSON.parse(localStorage.getItem('stations')) || [];
+    const stationsContainer = document.getElementById('stations');
+    stationsContainer.innerHTML = '';
 
-        function addScreen(index) {
-            const stations = JSON.parse(localStorage.getItem("stations")) || [];
-            stations[index].screens.push(`Schermo ${stations[index].screens.length + 1}`);
-            saveStations(stations);
-            loadStations();
-        }
-    </script>
+    stations.forEach((station, index) => {
+      const stationElement = document.createElement('div');
+      stationElement.className = 'station';
+      stationElement.innerHTML = `<p>Stazione ${index + 1}</p>`;
+
+      const addScreenButton = document.createElement('button');
+      addScreenButton.textContent = 'Aggiungi Schermo';
+      addScreenButton.onclick = () => addScreen(index);
+
+      stationElement.appendChild(addScreenButton);
+
+      station.screens.forEach((screen, screenIndex) => {
+        const screenElement = document.createElement('p');
+        screenElement.textContent = `Schermo ${screenIndex + 1}`;
+        stationElement.appendChild(screenElement);
+      });
+
+      stationsContainer.appendChild(stationElement);
+    });
+  }
+
+  function addStation() {
+    const stations = JSON.parse(localStorage.getItem('stations')) || [];
+    stations.push({ screens: [] });
+    localStorage.setItem('stations', JSON.stringify(stations));
+    loadStations();
+  }
+
+  function addScreen(stationIndex) {
+    const stations = JSON.parse(localStorage.getItem('stations')) || [];
+    stations[stationIndex].screens.push({});
+    localStorage.setItem('stations', JSON.stringify(stations));
+    loadStations();
+  }
+</script>
+
 </body>
 </html>
