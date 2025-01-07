@@ -51,6 +51,34 @@
       background-color: #ffffff;
       color: #1f1f1f;
     }
+
+    #modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #1f1f1f;
+      border: 1px solid #ffffff;
+      padding: 20px;
+      z-index: 1000;
+      text-align: center;
+    }
+
+    #modal input {
+      margin: 10px 0;
+    }
+
+    #overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+    }
   </style>
 </head>
 <body>
@@ -67,8 +95,19 @@
   <div id="stations"></div>
 </div>
 
+<div id="modal">
+  <h2>Conferma Eliminazione</h2>
+  <p>Inserisci la password per confermare:</p>
+  <input type="password" id="deletePassword" placeholder="Password">
+  <button onclick="confirmDelete()">Conferma</button>
+  <button onclick="closeModal()">Annulla</button>
+</div>
+<div id="overlay"></div>
+
 <script>
   const correctPassword = 'cassetta2';
+  const deletePassword = 'cassetta2025';
+  let stationToDelete = null;
 
   function checkPassword() {
     const inputPassword = document.getElementById('password').value;
@@ -95,7 +134,12 @@
       addScreenButton.textContent = 'Aggiungi Schermo';
       addScreenButton.onclick = () => addScreen(index);
 
+      const deleteButton = document.createElement('button');
+      deleteButton.textContent = 'Elimina Stazione';
+      deleteButton.onclick = () => openModal(index);
+
       stationElement.appendChild(addScreenButton);
+      stationElement.appendChild(deleteButton);
 
       station.screens.forEach((screen, screenIndex) => {
         const screenElement = document.createElement('p');
@@ -128,6 +172,31 @@
     stations[stationIndex].screens.push({});
     localStorage.setItem('stations', JSON.stringify(stations));
     loadStations();
+  }
+
+  function openModal(index) {
+    stationToDelete = index;
+    document.getElementById('modal').style.display = 'block';
+    document.getElementById('overlay').style.display = 'block';
+  }
+
+  function closeModal() {
+    stationToDelete = null;
+    document.getElementById('modal').style.display = 'none';
+    document.getElementById('overlay').style.display = 'none';
+  }
+
+  function confirmDelete() {
+    const inputPassword = document.getElementById('deletePassword').value;
+    if (inputPassword === deletePassword) {
+      const stations = JSON.parse(localStorage.getItem('stations')) || [];
+      stations.splice(stationToDelete, 1);
+      localStorage.setItem('stations', JSON.stringify(stations));
+      closeModal();
+      loadStations();
+    } else {
+      alert('Password errata');
+    }
   }
 </script>
 
