@@ -188,13 +188,21 @@
       stationElement.appendChild(deleteButton);
 
       station.screens.forEach((screen, screenIndex) => {
-        const screenElement = document.createElement('p');
-        screenElement.textContent = `Schermo ${screenIndex + 1}: ${screen.position}`;
+        const screenElement = document.createElement('div');
+        screenElement.innerHTML = `
+          <p>Schermo ${screenIndex + 1}: ${screen.position} (Codice: ${screen.code})</p>
+          <button onclick="assignFileToScreen(${screenIndex})">Assegna MP4</button>
+          <button onclick="openScreenSettings(${screenIndex})">Impostazioni</button>
+        `;
         stationElement.appendChild(screenElement);
       });
 
       stationsContainer.appendChild(stationElement);
     });
+  }
+
+  function generateRandomCode() {
+    return Math.floor(1000 + Math.random() * 9000); // Codice casuale di 4 cifre
   }
 
   function openAddModal() {
@@ -238,48 +246,9 @@
 
   function confirmScreenPosition() {
     const position = document.getElementById('screenPosition').value;
+    const screenCode = generateRandomCode();
     closeScreenModal();
-    if (position === 'Colonna') {
-      openColumnModal();
-    } else {
-      openOtherModal();
-    }
-  }
-
-  function openColumnModal() {
-    document.getElementById('columnModal').style.display = 'block';
-  }
-
-  function closeColumnModal() {
-    document.getElementById('columnModal').style.display = 'none';
-    document.getElementById('overlay').style.display = 'none';
-  }
-
-  function confirmColumnScreen() {
-    const pump1 = document.getElementById('pump1').value;
-    const pump2 = document.getElementById('pump2').value;
-    addScreen({ position: 'Colonna', pumps: [pump1, pump2] });
-    closeColumnModal();
-  }
-
-  function openOtherModal() {
-    document.getElementById('otherModal').style.display = 'block';
-     document.getElementById('overlay').style.display = 'block';
-  }
-
-  function closeOtherModal() {
-    document.getElementById('otherModal').style.display = 'none';
-    document.getElementById('overlay').style.display = 'none';
-  }
-
-  function confirmOtherScreen() {
-    const position = document.getElementById('screenOtherPosition').value;
-    if (position) {
-      addScreen({ position: `Altro: ${position}` });
-      closeOtherModal();
-    } else {
-      alert('Inserire una posizione valida.');
-    }
+    addScreen({ position, code: screenCode });
   }
 
   function addScreen(screen) {
@@ -319,8 +288,40 @@
     localStorage.setItem('stations', JSON.stringify(stations));
     loadStations();
   }
+
+  function assignFileToScreen(index) {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = 'video/mp4';
+    fileInput.onchange = function(event) {
+      const file = event.target.files[0];
+      if (file && file.type === 'video/mp4') {
+        const fileReader = new FileReader();
+        fileReader.onload = function() {
+          const stations = JSON.parse(localStorage.getItem('stations')) || [];
+          stations[stationForScreen].screens[index].videoFile = fileReader.result;
+          localStorage.setItem('stations', JSON.stringify(stations));
+          alert('File MP4 assegnato con successo.');
+        };
+        fileReader.readAsDataURL(file);
+      } else {
+        alert('Per favore, carica un file MP4.');
+      }
+    };
+    fileInput.click();
+  }
+
+  function openScreenSettings(index) {
+    const password = prompt("Inserisci la password per accedere alle impostazioni:");
+    if (password === deletePassword) {
+      const stations = JSON.parse(localStorage.getItem('stations')) || [];
+      const screen = stations[stationForScreen].screens[index];
+      alert(`Modifica schermo: ${screen.position} con codice: ${screen.code}`);
+    } else {
+      alert('Password errata!');
+    }
+  }
 </script>
 
 </body>
 </html>
-
