@@ -25,6 +25,11 @@
       gap: 10px;
     }
 
+    .error {
+      color: red;
+      margin-bottom: 10px;
+    }
+
     #main {
       display: none;
       width: 100%;
@@ -52,7 +57,7 @@
       color: #1f1f1f;
     }
 
-    #modal, #addModal {
+    #modal, #addModal, #screenModal, #columnModal, #otherModal {
       display: none;
       position: fixed;
       top: 50%;
@@ -65,7 +70,7 @@
       text-align: center;
     }
 
-    #modal input, #addModal input {
+    #modal input, #addModal input, #columnModal input, #otherModal input {
       margin: 10px 0;
     }
 
@@ -85,6 +90,7 @@
 
 <div id="login">
   <h1>Accedi</h1>
+  <p id="loginError" class="error" style="display: none;">Password errata</p>
   <input type="password" id="password" placeholder="Inserisci password">
   <button onclick="checkPassword()">Entra</button>
 </div>
@@ -99,6 +105,7 @@
   <h2>Conferma Eliminazione</h2>
   <p>Inserisci la password per confermare:</p>
   <input type="password" id="deletePassword" placeholder="Password">
+  <p id="deleteError" class="error" style="display: none;">Password errata</p>
   <button onclick="confirmDelete()">Conferma</button>
   <button onclick="closeModal()">Annulla</button>
 </div>
@@ -111,21 +118,51 @@
   <button onclick="closeAddModal()">Annulla</button>
 </div>
 
+<div id="screenModal">
+  <h2>Aggiungi Schermo</h2>
+  <p>Seleziona la posizione dello schermo:</p>
+  <select id="screenPosition">
+    <option value="Colonna">Colonna</option>
+    <option value="Altro">Altro</option>
+  </select>
+  <button onclick="confirmScreenPosition()">Continua</button>
+  <button onclick="closeScreenModal()">Annulla</button>
+</div>
+
+<div id="columnModal">
+  <h2>Configura Schermo in Colonna</h2>
+  <p>Numeri erogatori:</p>
+  <input type="number" id="pump1" placeholder="Erogatore 1">
+  <input type="number" id="pump2" placeholder="Erogatore 2">
+  <button onclick="confirmColumnScreen()">Aggiungi</button>
+  <button onclick="closeColumnModal()">Annulla</button>
+</div>
+
+<div id="otherModal">
+  <h2>Configura Schermo in Altro</h2>
+  <p>Posizione dello schermo:</p>
+  <input type="text" id="screenOtherPosition" placeholder="Posizione">
+  <button onclick="confirmOtherScreen()">Aggiungi</button>
+  <button onclick="closeOtherModal()">Annulla</button>
+</div>
+
 <div id="overlay"></div>
 
 <script>
   const correctPassword = 'cassetta2';
   const deletePassword = 'cassetta2025';
   let stationToDelete = null;
+  let stationForScreen = null;
 
   function checkPassword() {
     const inputPassword = document.getElementById('password').value;
+    const loginError = document.getElementById('loginError');
     if (inputPassword === correctPassword) {
       document.getElementById('login').style.display = 'none';
       document.getElementById('main').style.display = 'block';
       loadStations();
     } else {
-      alert('Password errata');
+      loginError.style.display = 'block';
     }
   }
 
@@ -141,7 +178,7 @@
 
       const addScreenButton = document.createElement('button');
       addScreenButton.textContent = 'Aggiungi Schermo';
-      addScreenButton.onclick = () => addScreen(index);
+      addScreenButton.onclick = () => openScreenModal(index);
 
       const deleteButton = document.createElement('button');
       deleteButton.textContent = 'Elimina Stazione';
@@ -152,7 +189,7 @@
 
       station.screens.forEach((screen, screenIndex) => {
         const screenElement = document.createElement('p');
-        screenElement.textContent = `Schermo ${screenIndex + 1}`;
+        screenElement.textContent = `Schermo ${screenIndex + 1}: ${screen.position}`;
         stationElement.appendChild(screenElement);
       });
 
@@ -188,40 +225,42 @@
     loadStations();
   }
 
-  function addScreen(stationIndex) {
-    const stations = JSON.parse(localStorage.getItem('stations')) || [];
-    stations[stationIndex].screens.push({});
-    localStorage.setItem('stations', JSON.stringify(stations));
-    loadStations();
-  }
-
-  function openModal(index) {
-    stationToDelete = index;
-    document.getElementById('modal').style.display = 'block';
+  function openScreenModal(index) {
+    stationForScreen = index;
+    document.getElementById('screenModal').style.display = 'block';
     document.getElementById('overlay').style.display = 'block';
   }
 
-  function closeModal() {
-    stationToDelete = null;
-    document.getElementById('modal').style.display = 'none';
+  function closeScreenModal() {
+    document.getElementById('screenModal').style.display = 'none';
     document.getElementById('overlay').style.display = 'none';
-    document.getElementById('deletePassword').value = '';
   }
 
-  function confirmDelete() {
-    const inputPassword = document.getElementById('deletePassword').value;
-    if (inputPassword === deletePassword) {
-      const stations = JSON.parse(localStorage.getItem('stations')) || [];
-      stations.splice(stationToDelete, 1);
-      localStorage.setItem('stations', JSON.stringify(stations));
-      closeModal();
-      loadStations();
+  function confirmScreenPosition() {
+    const position = document.getElementById('screenPosition').value;
+    closeScreenModal();
+    if (position === 'Colonna') {
+      openColumnModal();
     } else {
-      alert('Password errata');
-      document.getElementById('deletePassword').value = '';
+      openOtherModal();
     }
   }
-</script>
 
-</body>
-</html>
+  function openColumnModal() {
+    document.getElementById('columnModal').style.display = 'block';
+  }
+
+  function closeColumnModal() {
+    document.getElementById('columnModal').style.display = 'none';
+    document.getElementById('overlay').style.display = 'none';
+  }
+
+  function confirmColumnScreen() {
+    const pump1 = document.getElementById('pump1').value;
+    const pump2 = document.getElementById('pump2').value;
+    addScreen({ position: 'Colonna', pumps: [pump1, pump2] });
+    closeColumnModal();
+  }
+
+  function openOtherModal() {
+    document.getElementById('otherModal').style.display = 'block';
