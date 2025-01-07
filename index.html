@@ -129,14 +129,11 @@
         // Funzione di login
         function login() {
             const password = document.getElementById('password').value;
-            // Controllo della password del programmatore
-            if (password === 'cassetta2') {
-                document.getElementById('login-page').classList.add('hidden');
-                document.getElementById('programmazione-page').classList.remove('hidden');
-            }
-            // Controllo per i televisori
-            else if (password === '1') {
-                // Password "1" accede al televisore e avvia il video a tutto schermo
+            // Verifica se la password corrisponde a quella di un gruppo
+            const group = groups.find(group => group.password === password);
+            if (group) {
+                // Avvia il video del gruppo sulla TV
+                currentVideo = group.video;
                 const videoPlayer = document.getElementById('video-player');
                 videoPlayer.src = currentVideo;
                 document.getElementById('login-page').classList.add('hidden');
@@ -144,15 +141,6 @@
 
                 // Modalità fullscreen
                 videoPlayer.requestFullscreen();
-            }
-            // Controllo per i gruppi
-            else if (groups.some(group => group.password === password)) {
-                const group = groups.find(g => g.password === password);
-                currentVideo = group.video;
-                document.getElementById('login-page').classList.add('hidden');
-                document.getElementById('visualizzazione-page').classList.remove('hidden');
-                const videoPlayer = document.getElementById('video-player');
-                videoPlayer.src = currentVideo;
             } else {
                 alert('Password errata!');
             }
@@ -202,15 +190,6 @@
             groups.forEach(group => {
                 const groupElement = document.createElement('div');
                 groupElement.innerHTML = `<p><strong>Gruppo:</strong> ${group.name} <br> <strong>Password:</strong> ${group.password}</p>`;
-                const syncButton = document.createElement('button');
-                syncButton.textContent = 'Avvia Video Gruppo';
-                syncButton.onclick = () => {
-                    // Avvia il video sulla TV, non nel programmatore
-                    const videoPlayer = document.getElementById('video-player');
-                    videoPlayer.src = group.video;
-                    document.getElementById('visualizzazione-page').classList.remove('hidden'); // Mostra la pagina di visualizzazione
-                };
-                groupElement.appendChild(syncButton);
                 groupsDiv.appendChild(groupElement);
             });
         }
