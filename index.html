@@ -264,3 +264,63 @@
 
   function openOtherModal() {
     document.getElementById('otherModal').style.display = 'block';
+     document.getElementById('overlay').style.display = 'block';
+  }
+
+  function closeOtherModal() {
+    document.getElementById('otherModal').style.display = 'none';
+    document.getElementById('overlay').style.display = 'none';
+  }
+
+  function confirmOtherScreen() {
+    const position = document.getElementById('screenOtherPosition').value;
+    if (position) {
+      addScreen({ position: `Altro: ${position}` });
+      closeOtherModal();
+    } else {
+      alert('Inserire una posizione valida.');
+    }
+  }
+
+  function addScreen(screen) {
+    const stations = JSON.parse(localStorage.getItem('stations')) || [];
+    stations[stationForScreen].screens.push(screen);
+    localStorage.setItem('stations', JSON.stringify(stations));
+    loadStations();
+  }
+
+  function openModal(index) {
+    stationToDelete = index;
+    document.getElementById('modal').style.display = 'block';
+    document.getElementById('overlay').style.display = 'block';
+    document.getElementById('deletePassword').value = '';
+    document.getElementById('deleteError').style.display = 'none';
+  }
+
+  function closeModal() {
+    document.getElementById('modal').style.display = 'none';
+    document.getElementById('overlay').style.display = 'none';
+  }
+
+  function confirmDelete() {
+    const inputPassword = document.getElementById('deletePassword').value;
+    const deleteError = document.getElementById('deleteError');
+    if (inputPassword === deletePassword) {
+      deleteStation();
+      closeModal();
+    } else {
+      deleteError.style.display = 'block';
+    }
+  }
+
+  function deleteStation() {
+    const stations = JSON.parse(localStorage.getItem('stations')) || [];
+    stations.splice(stationToDelete, 1);
+    localStorage.setItem('stations', JSON.stringify(stations));
+    loadStations();
+  }
+</script>
+
+</body>
+</html>
+
