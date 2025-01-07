@@ -52,7 +52,7 @@
       color: #1f1f1f;
     }
 
-    #modal {
+    #modal, #addModal {
       display: none;
       position: fixed;
       top: 50%;
@@ -65,7 +65,7 @@
       text-align: center;
     }
 
-    #modal input {
+    #modal input, #addModal input {
       margin: 10px 0;
     }
 
@@ -91,7 +91,7 @@
 
 <div id="main">
   <h1>Gestione Stazioni di Servizio</h1>
-  <button onclick="promptAddStation()">Aggiungi stazione di servizio</button>
+  <button onclick="openAddModal()">Aggiungi stazione di servizio</button>
   <div id="stations"></div>
 </div>
 
@@ -102,6 +102,15 @@
   <button onclick="confirmDelete()">Conferma</button>
   <button onclick="closeModal()">Annulla</button>
 </div>
+
+<div id="addModal">
+  <h2>Aggiungi Stazione di Servizio</h2>
+  <p>Inserisci il codice della sede:</p>
+  <input type="text" id="addStationCode" placeholder="Codice sede">
+  <button onclick="confirmAddStation()">Aggiungi</button>
+  <button onclick="closeAddModal()">Annulla</button>
+</div>
+
 <div id="overlay"></div>
 
 <script>
@@ -151,10 +160,22 @@
     });
   }
 
-  function promptAddStation() {
-    const stationCode = prompt('Inserisci il codice della sede per la nuova stazione di servizio:');
+  function openAddModal() {
+    document.getElementById('addModal').style.display = 'block';
+    document.getElementById('overlay').style.display = 'block';
+  }
+
+  function closeAddModal() {
+    document.getElementById('addModal').style.display = 'none';
+    document.getElementById('overlay').style.display = 'none';
+    document.getElementById('addStationCode').value = '';
+  }
+
+  function confirmAddStation() {
+    const stationCode = document.getElementById('addStationCode').value;
     if (stationCode) {
       addStation(stationCode);
+      closeAddModal();
     } else {
       alert('Codice della sede non inserito.');
     }
