@@ -95,8 +95,17 @@
       margin-top: 10px;
     }
 
-    .modal button:hover {
+    .modal button.red {
       background-color: #ff4b4b;
+    }
+
+    .modal button.red:hover {
+      background-color: #d43f3f;
+    }
+
+    .modal button:hover {
+      background-color: #ffffff;
+      color: #1f1f1f;
     }
   </style>
 </head>
@@ -115,14 +124,14 @@
   <div id="stations"></div>
 </div>
 
-<!-- Modale per eliminazione -->
-<div id="deleteModal" class="modal">
-  <h2>Conferma Eliminazione</h2>
+<!-- Modale per eliminazione stazione -->
+<div id="deleteStationModal" class="modal">
+  <h2>Conferma Eliminazione Stazione</h2>
   <p>Inserisci la password per confermare:</p>
-  <input type="password" id="deletePassword" placeholder="Password">
-  <p id="deleteError" class="error" style="display: none;">Password errata</p>
-  <button onclick="confirmDelete()">Conferma</button>
-  <button onclick="closeModal('deleteModal')">Annulla</button>
+  <input type="password" id="deleteStationPassword" placeholder="Password">
+  <p id="deleteStationError" class="error" style="display: none;">Password errata</p>
+  <button onclick="confirmDeleteStation()">Conferma</button>
+  <button onclick="closeModal('deleteStationModal')">Annulla</button>
 </div>
 
 <!-- Modale per aggiungere una nuova stazione -->
@@ -134,31 +143,16 @@
   <button onclick="closeModal('addModal')">Annulla</button>
 </div>
 
-<!-- Modale per configurare un nuovo schermo -->
-<div id="screenModal" class="modal">
-  <h2>Aggiungi Schermo</h2>
-  <p>Seleziona la posizione dello schermo:</p>
-  <select id="screenPosition" onchange="handlePositionChange()">
-    <option value="Colonna">Colonna</option>
-    <option value="Altro">Altro</option>
-  </select>
-  
-  <div id="columnFields" style="display: none;">
-    <p>Inserisci i numeri degli erogatori:</p>
-    <input type="number" id="pump1" placeholder="Erogatore 1">
-    <input type="number" id="pump2" placeholder="Erogatore 2">
-  </div>
-
-  <div id="otherFields" style="display: none;">
-    <p>Posizione dello schermo:</p>
-    <input type="text" id="screenOtherPosition" placeholder="Posizione">
-  </div>
-
-  <button onclick="confirmScreenPosition()">Continua</button>
-  <button onclick="closeModal('screenModal')">Annulla</button>
+<!-- Modale per chiedere password prima di accedere alle impostazioni dello schermo -->
+<div id="screenPasswordModal" class="modal">
+  <h2>Inserisci la password</h2>
+  <input type="password" id="screenPassword" placeholder="Password">
+  <p id="screenPasswordError" class="error" style="display: none;">Password errata</p>
+  <button onclick="checkScreenPassword()">Accedi</button>
+  <button onclick="closeModal('screenPasswordModal')">Annulla</button>
 </div>
 
-<!-- Modale per modificare schermo -->
+<!-- Modale per modificare lo schermo -->
 <div id="screenSettingsModal" class="modal">
   <h2>Modifica Schermo</h2>
   <p>Modifica i dati dello schermo:</p>
@@ -175,6 +169,7 @@
     <input type="text" id="screenOtherPositionSettings" placeholder="Posizione">
   </div>
   <button onclick="confirmScreenSettings()">Salva Modifiche</button>
+  <button class="red" onclick="deleteScreen()">Elimina Schermo</button>
   <button onclick="closeModal('screenSettingsModal')">Annulla</button>
 </div>
 
@@ -212,8 +207,9 @@
       addScreenButton.onclick = () => openScreenModal(index);
 
       const deleteButton = document.createElement('button');
+      deleteButton.classList.add('red');
       deleteButton.textContent = 'Elimina Stazione';
-      deleteButton.onclick = () => openModal('deleteModal', index);
+      deleteButton.onclick = () => openModal('deleteStationModal', index);
 
       stationElement.appendChild(addScreenButton);
       stationElement.appendChild(deleteButton);
@@ -266,79 +262,26 @@
 
   function openScreenModal(index) {
     stationForScreen = index;
-    document.getElementById('screenModal').classList.add('active');
+    document.getElementById('screenPasswordModal').classList.add('active');
   }
 
-  function handlePositionChange() {
-    const position = document.getElementById('screenPosition').value;
-    if (position === "Colonna") {
-      document.getElementById('columnFields').style.display = 'block';
-      document.getElementById('otherFields').style.display = 'none';
+  function checkScreenPassword() {
+    const password = document.getElementById('screenPassword').value;
+    const errorMessage = document.getElementById('screenPasswordError');
+    if (password === deletePassword) {
+      closeModal('screenPasswordModal');
+      openScreenSettingsModal();
     } else {
-      document.getElementById('columnFields').style.display = 'none';
-      document.getElementById('otherFields').style.display = 'block';
+      errorMessage.style.display = 'block';
     }
   }
 
-  function confirmScreenPosition() {
-    const position = document.getElementById('screenPosition').value;
-    const screenCode = generateRandomCode();
-    let screen = { position, code: screenCode };
-
-    if (position === "Colonna") {
-      const pump1 = document.getElementById('pump1').value;
-      const pump2 = document.getElementById('pump2').value;
-      if (pump1 && pump2) {
-        screen.pumps = [pump1, pump2];
-        addScreen(screen);
-        closeModal('screenModal');
-      } else {
-        alert('Inserisci i numeri degli erogatori.');
-      }
-    } else if (position === "Altro") {
-      const screenOtherPosition = document.getElementById('screenOtherPosition').value;
-      if (screenOtherPosition) {
-        screen.positionDetails = screenOtherPosition;
-        addScreen(screen);
-        closeModal('screenModal');
-      } else {
-        alert('Inserisci la posizione dello schermo.');
-      }
-    }
-  }
-
-  function addScreen(screen) {
-    const stations = JSON.parse(localStorage.getItem('stations')) || [];
-    stations[stationForScreen].screens.push(screen);
-    localStorage.setItem('stations', JSON.stringify(stations));
-    loadStations();
-  }
-
-  function assignFileToScreen(stationIndex, screenIndex) {
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = 'video/mp4';
-    fileInput.onchange = function(event) {
-      const file = event.target.files[0];
-      if (file && file.type === 'video/mp4') {
-        const fileReader = new FileReader();
-        fileReader.onload = function() {
-          const stations = JSON.parse(localStorage.getItem('stations')) || [];
-          stations[stationIndex].screens[screenIndex].videoFile = fileReader.result;
-          localStorage.setItem('stations', JSON.stringify(stations));
-          alert('File MP4 assegnato con successo.');
-        };
-        fileReader.readAsDataURL(file);
-      } else {
-        alert('Per favore, carica un file MP4.');
-      }
-    };
-    fileInput.click();
-  }
-
-  function openScreenSettings(stationIndex, screenIndex) {
-    const screen = JSON.parse(localStorage.getItem('stations'))[stationIndex].screens[screenIndex];
-    screenIndexToEdit = { stationIndex, screenIndex };
+  function openScreenSettingsModal() {
+    const stationIndex = stationForScreen;
+    const station = JSON.parse(localStorage.getItem('stations'))[stationIndex];
+    
+    screenIndexToEdit = 0; // Assuming only one screen per station
+    const screen = station.screens[screenIndexToEdit];
     
     document.getElementById('screenCode').value = screen.code;
     document.getElementById('screenPositionSettings').value = screen.position;
@@ -356,8 +299,8 @@
   }
 
   function confirmScreenSettings() {
-    const stationIndex = screenIndexToEdit.stationIndex;
-    const screenIndex = screenIndexToEdit.screenIndex;
+    const stationIndex = stationForScreen;
+    const screenIndex = screenIndexToEdit;
     const updatedScreen = {
       code: document.getElementById('screenCode').value,
       position: document.getElementById('screenPositionSettings').value
@@ -379,20 +322,28 @@
     closeModal('screenSettingsModal');
   }
 
+  function deleteScreen() {
+    const stations = JSON.parse(localStorage.getItem('stations'));
+    stations[stationForScreen].screens.splice(screenIndexToEdit, 1);
+    localStorage.setItem('stations', JSON.stringify(stations));
+    loadStations();
+    closeModal('screenSettingsModal');
+  }
+
   function openModal(modalId, stationIndex = null) {
     document.getElementById(modalId).classList.add('active');
     stationToDelete = stationIndex;
   }
 
-  function confirmDelete() {
-    const password = document.getElementById('deletePassword').value;
-    const errorMessage = document.getElementById('deleteError');
+  function confirmDeleteStation() {
+    const password = document.getElementById('deleteStationPassword').value;
+    const errorMessage = document.getElementById('deleteStationError');
     if (password === deletePassword) {
       const stations = JSON.parse(localStorage.getItem('stations'));
       stations.splice(stationToDelete, 1);
       localStorage.setItem('stations', JSON.stringify(stations));
       loadStations();
-      closeModal('deleteModal');
+      closeModal('deleteStationModal');
     } else {
       errorMessage.style.display = 'block';
     }
