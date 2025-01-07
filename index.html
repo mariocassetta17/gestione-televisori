@@ -194,9 +194,10 @@
                 const syncButton = document.createElement('button');
                 syncButton.textContent = 'Avvia Video Gruppo';
                 syncButton.onclick = () => {
-                    alert(`Video sincronizzato per il gruppo: ${group.name}`);
+                    // Avvia il video sulla TV, non nel programmatore
                     const videoPlayer = document.getElementById('video-player');
                     videoPlayer.src = group.video;
+                    document.getElementById('visualizzazione-page').classList.remove('hidden'); // Mostra la pagina di visualizzazione
                 };
                 groupElement.appendChild(syncButton);
                 groupsDiv.appendChild(groupElement);
