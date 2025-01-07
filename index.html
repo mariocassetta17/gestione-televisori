@@ -63,7 +63,7 @@
 
 <div id="main">
   <h1>Gestione Stazioni di Servizio</h1>
-  <button onclick="addStation()">Aggiungi stazione di servizio</button>
+  <button onclick="promptAddStation()">Aggiungi stazione di servizio</button>
   <div id="stations"></div>
 </div>
 
@@ -89,7 +89,7 @@
     stations.forEach((station, index) => {
       const stationElement = document.createElement('div');
       stationElement.className = 'station';
-      stationElement.innerHTML = `<p>Stazione ${index + 1}</p>`;
+      stationElement.innerHTML = `<p>${station.code}</p>`;
 
       const addScreenButton = document.createElement('button');
       addScreenButton.textContent = 'Aggiungi Schermo';
@@ -107,9 +107,18 @@
     });
   }
 
-  function addStation() {
+  function promptAddStation() {
+    const stationCode = prompt('Inserisci il codice della sede per la nuova stazione di servizio:');
+    if (stationCode) {
+      addStation(stationCode);
+    } else {
+      alert('Codice della sede non inserito.');
+    }
+  }
+
+  function addStation(stationCode) {
     const stations = JSON.parse(localStorage.getItem('stations')) || [];
-    stations.push({ screens: [] });
+    stations.push({ code: stationCode, screens: [] });
     localStorage.setItem('stations', JSON.stringify(stations));
     loadStations();
   }
