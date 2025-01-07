@@ -135,6 +135,17 @@
                 document.getElementById('programmazione-page').classList.remove('hidden');
             }
             // Controllo per i televisori
+            else if (password === '1') {
+                // Password "1" accede al televisore e avvia il video a tutto schermo
+                const videoPlayer = document.getElementById('video-player');
+                videoPlayer.src = currentVideo;
+                document.getElementById('login-page').classList.add('hidden');
+                document.getElementById('visualizzazione-page').classList.remove('hidden');
+
+                // Modalità fullscreen
+                videoPlayer.requestFullscreen();
+            }
+            // Controllo per i gruppi
             else if (groups.some(group => group.password === password)) {
                 const group = groups.find(g => g.password === password);
                 currentVideo = group.video;
