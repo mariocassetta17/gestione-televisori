@@ -1,120 +1,109 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sito con login e creazione account</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #121212;
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      flex-direction: column;
-    }
-
-    .container {
-      text-align: center;
-    }
-
-    input {
-      padding: 10px;
-      margin: 10px;
-      border: none;
-      background-color: #333;
-      color: white;
-      border-radius: 5px;
-    }
-
-    button {
-      padding: 10px 20px;
-      background-color: #555;
-      color: white;
-      border: none;
-      cursor: pointer;
-      border-radius: 5px;
-    }
-
-    button:hover {
-      background-color: #777;
-    }
-
-    h1, h2 {
-      color: white;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Stazioni di Servizio</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .container {
+            text-align: center;
+            width: 90%;
+            max-width: 600px;
+        }
+        button {
+            background-color: #1e88e5;
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #1565c0;
+        }
+        .station {
+            border: 1px solid #ffffff;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 10px;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Benvenuto nel sito!</h1>
-
-    <!-- Form di login -->
-    <div id="loginForm">
-      <h2>Accedi</h2>
-      <input type="password" id="password" placeholder="Password" />
-      <button onclick="login()">Accedi</button>
+    <div class="container">
+        <h1>Accesso</h1>
+        <input type="password" id="password" placeholder="Inserisci la password" />
+        <button onclick="login()">Accedi</button>
     </div>
 
-    <!-- Sezione per la creazione account -->
-    <div id="accountForm" style="display: none;">
-      <h2>Crea nuovo account</h2>
-      <input type="text" id="newUsername" placeholder="Nome utente" />
-      <input type="password" id="newPassword" placeholder="Password" />
-      <button onclick="createAccount()">Crea account</button>
-      <p id="accountMessage"></p>
+    <div class="container" id="dashboard" style="display: none;">
+        <h1>Gestione Stazioni di Servizio</h1>
+        <button onclick="addStation()">Aggiungi Stazione di Servizio</button>
+        <div id="stations"></div>
     </div>
 
-    <!-- Messaggio di benvenuto -->
-    <div id="welcomeMessage" style="display: none;">
-      <h2>Ciao!</h2>
-      <button onclick="logout()">Esci</button>
-    </div>
-  </div>
+    <script>
+        // Gestione autenticazione
+        function login() {
+            const password = document.getElementById("password").value;
+            if (password === "cassetta2") {
+                document.querySelector(".container").style.display = "none";
+                document.getElementById("dashboard").style.display = "block";
+                loadStations();
+            } else {
+                alert("Password errata!");
+            }
+        }
 
-  <script>
-    let accounts = []; // Array per memorizzare gli account creati
-    let isLoggedIn = false;
+        // Salvataggio nel localStorage
+        function saveStations(stations) {
+            localStorage.setItem("stations", JSON.stringify(stations));
+        }
 
-    function login() {
-      const password = document.getElementById("password").value;
-      if (password === "casetta2") {
-        isLoggedIn = true;
-        document.getElementById("loginForm").style.display = "none";
-        document.getElementById("accountForm").style.display = "block";
-        document.getElementById("welcomeMessage").style.display = "block";
-      } else {
-        alert("Password errata!");
-      }
-    }
+        function loadStations() {
+            const stations = JSON.parse(localStorage.getItem("stations")) || [];
+            const stationsContainer = document.getElementById("stations");
+            stationsContainer.innerHTML = "";
+            stations.forEach((station, index) => {
+                const stationDiv = document.createElement("div");
+                stationDiv.className = "station";
+                stationDiv.innerHTML = `
+                    <h2>${station.name}</h2>
+                    <button onclick="addScreen(${index})">Aggiungi Schermo</button>
+                    <ul>
+                        ${station.screens.map(screen => `<li>${screen}</li>`).join("")}
+                    </ul>
+                `;
+                stationsContainer.appendChild(stationDiv);
+            });
+        }
 
-    function createAccount() {
-      const username = document.getElementById("newUsername").value;
-      const password = document.getElementById("newPassword").value;
+        function addStation() {
+            const stations = JSON.parse(localStorage.getItem("stations")) || [];
+            const newStation = { name: `Stazione ${stations.length + 1}`, screens: [] };
+            stations.push(newStation);
+            saveStations(stations);
+            loadStations();
+        }
 
-      if (username && password) {
-        accounts.push({ username, password });
-        document.getElementById("accountMessage").innerText = `Account ${username} creato con successo!`;
-      } else {
-        alert("Inserisci tutti i campi.");
-      }
-    }
-
-    function logout() {
-      isLoggedIn = false;
-      document.getElementById("loginForm").style.display = "block";
-      document.getElementById("accountForm").style.display = "none";
-      document.getElementById("welcomeMessage").style.display = "none";
-      document.getElementById("password").value = '';
-    }
-  </script>
+        function addScreen(index) {
+            const stations = JSON.parse(localStorage.getItem("stations")) || [];
+            stations[index].screens.push(`Schermo ${stations[index].screens.length + 1}`);
+            saveStations(stations);
+            loadStations();
+        }
+    </script>
 </body>
 </html>
