@@ -184,6 +184,7 @@
     stationToDelete = null;
     document.getElementById('modal').style.display = 'none';
     document.getElementById('overlay').style.display = 'none';
+    document.getElementById('deletePassword').value = '';
   }
 
   function confirmDelete() {
@@ -196,6 +197,7 @@
       loadStations();
     } else {
       alert('Password errata');
+      document.getElementById('deletePassword').value = '';
     }
   }
 </script>
