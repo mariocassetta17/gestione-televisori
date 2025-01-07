@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -49,13 +49,46 @@
             width: 100%;
             height: auto;
         }
+        /* Style per il modale */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <!-- Login Page -->
         <div id="login-page">
-            <h2>Inserisci la Password</h2>
+            <h2>Inserisci la Password del Televisore</h2>
             <input type="password" id="password" placeholder="Password">
             <button onclick="login()">Accedi</button>
         </div>
@@ -65,7 +98,7 @@
             <h2>Modalità Programmazione</h2>
             <label for="group">Nome Gruppo:</label>
             <input type="text" id="group" placeholder="Inserisci nome gruppo">
-            <button onclick="createGroup()">Crea Gruppo</button>
+            <button onclick="openModal()">Crea Gruppo</button>
 
             <div id="groups"></div>
         </div>
@@ -76,13 +109,26 @@
         </div>
     </div>
 
+    <!-- Modal per la creazione del gruppo -->
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3>Crea un Nuovo Gruppo</h3>
+            <label for="group-password">Password del Televisore:</label>
+            <input type="password" id="group-password" placeholder="Password del televisore">
+            <label for="video-file">Seleziona il Video:</label>
+            <input type="file" id="video-file">
+            <button onclick="createGroup()">Crea Gruppo</button>
+        </div>
+    </div>
+
     <script>
         const groups = [];
         let currentVideo = '';
 
         function login() {
             const password = document.getElementById('password').value;
-            if (password === 'cassetta2') {
+            if (password === 'televisore123') {
                 document.getElementById('login-page').classList.add('hidden');
                 document.getElementById('programmazione-page').classList.remove('hidden');
             } else if (groups.some(group => group.password === password)) {
@@ -97,25 +143,38 @@
             }
         }
 
+        function openModal() {
+            const modal = document.getElementById("myModal");
+            modal.style.display = "block";
+        }
+
+        function closeModal() {
+            const modal = document.getElementById("myModal");
+            modal.style.display = "none";
+        }
+
         function createGroup() {
             const groupName = document.getElementById('group').value;
-            if (!groupName) {
-                alert('Inserisci un nome per il gruppo!');
+            const groupPassword = document.getElementById('group-password').value;
+            const videoFile = document.getElementById('video-file').files[0];
+
+            if (!groupName || !groupPassword || !videoFile) {
+                alert('Tutti i campi sono obbligatori!');
                 return;
             }
-            const groupPassword = prompt('Inserisci una password per il gruppo:');
-            const videoURL = prompt('Inserisci URL del video per il gruppo:');
-            if (!groupPassword || !videoURL) {
-                alert('Password o URL non validi!');
-                return;
-            }
-            const newGroup = {
-                name: groupName,
-                password: groupPassword,
-                video: videoURL,
+
+            const reader = new FileReader();
+            reader.onloadend = function () {
+                const newGroup = {
+                    name: groupName,
+                    password: groupPassword,
+                    video: reader.result, // Salviamo il contenuto del video come base64
+                };
+                groups.push(newGroup);
+                displayGroups();
+                closeModal(); // Chiudi il modale dopo aver creato il gruppo
             };
-            groups.push(newGroup);
-            displayGroups();
+            reader.readAsDataURL(videoFile); // Carichiamo il video come base64
         }
 
         function displayGroups() {
@@ -126,7 +185,11 @@
                 groupElement.innerHTML = `<p><strong>Gruppo:</strong> ${group.name} <br> <strong>Password:</strong> ${group.password}</p>`;
                 const syncButton = document.createElement('button');
                 syncButton.textContent = 'Avvia Video Gruppo';
-                syncButton.onclick = () => alert(`Video sincronizzato per il gruppo: ${group.name}`);
+                syncButton.onclick = () => {
+                    alert(`Video sincronizzato per il gruppo: ${group.name}`);
+                    const videoPlayer = document.getElementById('video-player');
+                    videoPlayer.src = group.video;
+                };
                 groupElement.appendChild(syncButton);
                 groupsDiv.appendChild(groupElement);
             });
