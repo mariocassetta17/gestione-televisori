@@ -337,68 +337,66 @@
   }
 
   function openScreenSettings(stationIndex, screenIndex) {
-    screenIndexToEdit = screenIndex;
-    const stations = JSON.parse(localStorage.getItem('stations')) || [];
-    const screen = stations[stationIndex].screens[screenIndex];
-
+    const screen = JSON.parse(localStorage.getItem('stations'))[stationIndex].screens[screenIndex];
+    screenIndexToEdit = { stationIndex, screenIndex };
+    
     document.getElementById('screenCode').value = screen.code;
     document.getElementById('screenPositionSettings').value = screen.position;
     if (screen.position === 'Colonna') {
       document.getElementById('columnFieldsSettings').style.display = 'block';
       document.getElementById('otherFieldsSettings').style.display = 'none';
-      document.getElementById('pump1Settings').value = screen.pumps[0];
-      document.getElementById('pump2Settings').value = screen.pumps[1];
+      document.getElementById('pump1Settings').value = screen.pumps ? screen.pumps[0] : '';
+      document.getElementById('pump2Settings').value = screen.pumps ? screen.pumps[1] : '';
     } else {
       document.getElementById('columnFieldsSettings').style.display = 'none';
       document.getElementById('otherFieldsSettings').style.display = 'block';
-      document.getElementById('screenOtherPositionSettings').value = screen.positionDetails;
+      document.getElementById('screenOtherPositionSettings').value = screen.positionDetails || '';
     }
     document.getElementById('screenSettingsModal').classList.add('active');
   }
 
   function confirmScreenSettings() {
-    const stations = JSON.parse(localStorage.getItem('stations')) || [];
-    const station = stations[stationForScreen];
-    const screen = station.screens[screenIndexToEdit];
+    const stationIndex = screenIndexToEdit.stationIndex;
+    const screenIndex = screenIndexToEdit.screenIndex;
+    const updatedScreen = {
+      code: document.getElementById('screenCode').value,
+      position: document.getElementById('screenPositionSettings').value
+    };
 
-    const updatedCode = document.getElementById('screenCode').value;
-    const updatedPosition = document.getElementById('screenPositionSettings').value;
-
-    screen.code = updatedCode;
-    screen.position = updatedPosition;
-
-    if (updatedPosition === "Colonna") {
-      screen.pumps = [
+    if (updatedScreen.position === 'Colonna') {
+      updatedScreen.pumps = [
         document.getElementById('pump1Settings').value,
-        document.getElementById('pump2Settings').value,
+        document.getElementById('pump2Settings').value
       ];
-    } else {
-      screen.positionDetails = document.getElementById('screenOtherPositionSettings').value;
+    } else if (updatedScreen.position === 'Altro') {
+      updatedScreen.positionDetails = document.getElementById('screenOtherPositionSettings').value;
     }
 
+    const stations = JSON.parse(localStorage.getItem('stations'));
+    stations[stationIndex].screens[screenIndex] = updatedScreen;
     localStorage.setItem('stations', JSON.stringify(stations));
     loadStations();
     closeModal('screenSettingsModal');
   }
 
-  function openModal(modalId, stationIndex) {
-    stationToDelete = stationIndex;
+  function openModal(modalId, stationIndex = null) {
     document.getElementById(modalId).classList.add('active');
+    stationToDelete = stationIndex;
   }
 
   function confirmDelete() {
-    const inputPassword = document.getElementById('deletePassword').value;
-    if (inputPassword === deletePassword) {
-      const stations = JSON.parse(localStorage.getItem('stations')) || [];
+    const password = document.getElementById('deletePassword').value;
+    const errorMessage = document.getElementById('deleteError');
+    if (password === deletePassword) {
+      const stations = JSON.parse(localStorage.getItem('stations'));
       stations.splice(stationToDelete, 1);
       localStorage.setItem('stations', JSON.stringify(stations));
       loadStations();
       closeModal('deleteModal');
     } else {
-      document.getElementById('deleteError').style.display = 'block';
+      errorMessage.style.display = 'block';
     }
   }
 </script>
-
 </body>
 </html>
