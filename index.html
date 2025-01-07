@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Televisori</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f9;
+        }
+        .container {
+            width: 90%;
+            max-width: 600px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .hidden {
+            display: none;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        video {
+            width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Login Page -->
+        <div id="login-page">
+            <h2>Inserisci la Password</h2>
+            <input type="password" id="password" placeholder="Password">
+            <button onclick="login()">Accedi</button>
+        </div>
+
+        <!-- Programmazione Page -->
+        <div id="programmazione-page" class="hidden">
+            <h2>Modalità Programmazione</h2>
+            <label for="group">Nome Gruppo:</label>
+            <input type="text" id="group" placeholder="Inserisci nome gruppo">
+            <button onclick="createGroup()">Crea Gruppo</button>
+
+            <div id="groups"></div>
+        </div>
+
+        <!-- Visualizzazione Page -->
+        <div id="visualizzazione-page" class="hidden">
+            <video id="video-player" controls autoplay loop></video>
+        </div>
+    </div>
+
+    <script>
+        const groups = [];
+        let currentVideo = '';
+
+        function login() {
+            const password = document.getElementById('password').value;
+            if (password === 'cassetta2') {
+                document.getElementById('login-page').classList.add('hidden');
+                document.getElementById('programmazione-page').classList.remove('hidden');
+            } else if (groups.some(group => group.password === password)) {
+                const group = groups.find(g => g.password === password);
+                currentVideo = group.video;
+                document.getElementById('login-page').classList.add('hidden');
+                document.getElementById('visualizzazione-page').classList.remove('hidden');
+                const videoPlayer = document.getElementById('video-player');
+                videoPlayer.src = currentVideo;
+            } else {
+                alert('Password errata!');
+            }
+        }
+
+        function createGroup() {
+            const groupName = document.getElementById('group').value;
+            if (!groupName) {
+                alert('Inserisci un nome per il gruppo!');
+                return;
+            }
+            const groupPassword = prompt('Inserisci una password per il gruppo:');
+            const videoURL = prompt('Inserisci URL del video per il gruppo:');
+            if (!groupPassword || !videoURL) {
+                alert('Password o URL non validi!');
+                return;
+            }
+            const newGroup = {
+                name: groupName,
+                password: groupPassword,
+                video: videoURL,
+            };
+            groups.push(newGroup);
+            displayGroups();
+        }
+
+        function displayGroups() {
+            const groupsDiv = document.getElementById('groups');
+            groupsDiv.innerHTML = '';
+            groups.forEach(group => {
+                const groupElement = document.createElement('div');
+                groupElement.innerHTML = `<p><strong>Gruppo:</strong> ${group.name} <br> <strong>Password:</strong> ${group.password}</p>`;
+                const syncButton = document.createElement('button');
+                syncButton.textContent = 'Avvia Video Gruppo';
+                syncButton.onclick = () => alert(`Video sincronizzato per il gruppo: ${group.name}`);
+                groupElement.appendChild(syncButton);
+                groupsDiv.appendChild(groupElement);
+            });
+        }
+    </script>
+</body>
+</html>
