@@ -143,42 +143,29 @@
   <button onclick="closeModal('addModal')">Annulla</button>
 </div>
 
-<!-- Modale per chiedere password prima di accedere alle impostazioni dello schermo -->
-<div id="screenPasswordModal" class="modal">
-  <h2>Inserisci la password</h2>
-  <input type="password" id="screenPassword" placeholder="Password">
-  <p id="screenPasswordError" class="error" style="display: none;">Password errata</p>
-  <button onclick="checkScreenPassword()">Accedi</button>
-  <button onclick="closeModal('screenPasswordModal')">Annulla</button>
-</div>
-
-<!-- Modale per modificare lo schermo -->
-<div id="screenSettingsModal" class="modal">
-  <h2>Modifica Schermo</h2>
-  <p>Modifica i dati dello schermo:</p>
-  <input type="text" id="screenCode" placeholder="Codice Schermo">
-  <select id="screenPositionSettings">
+<!-- Modale per aggiungere uno schermo -->
+<div id="addScreenModal" class="modal">
+  <h2>Aggiungi Schermo</h2>
+  <p>Posizione dello schermo:</p>
+  <select id="screenPosition">
     <option value="Colonna">Colonna</option>
     <option value="Altro">Altro</option>
   </select>
-  <div id="columnFieldsSettings" style="display: none;">
-    <input type="number" id="pump1Settings" placeholder="Erogatore 1">
-    <input type="number" id="pump2Settings" placeholder="Erogatore 2">
+  <div id="columnFields" style="display: none;">
+    <input type="number" id="pump1" placeholder="Erogatore 1">
+    <input type="number" id="pump2" placeholder="Erogatore 2">
   </div>
-  <div id="otherFieldsSettings" style="display: none;">
-    <input type="text" id="screenOtherPositionSettings" placeholder="Posizione">
+  <div id="otherFields" style="display: none;">
+    <input type="text" id="screenOtherPosition" placeholder="Posizione">
   </div>
-  <button onclick="confirmScreenSettings()">Salva Modifiche</button>
-  <button class="red" onclick="deleteScreen()">Elimina Schermo</button>
-  <button onclick="closeModal('screenSettingsModal')">Annulla</button>
+  <button onclick="confirmAddScreen()">Aggiungi Schermo</button>
+  <button onclick="closeModal('addScreenModal')">Annulla</button>
 </div>
 
 <script>
-  const correctPassword = 'cassetta2';
-  const deletePassword = 'cassetta2025';
+  const correctPassword = 'cassetta2025';
   let stationToDelete = null;
   let stationForScreen = null;
-  let screenIndexToEdit = null;
 
   function checkPassword() {
     const inputPassword = document.getElementById('password').value;
@@ -220,19 +207,14 @@
           <p><strong>Schermo ${screenIndex + 1}:</strong> Posizione: ${screen.position}, Codice: ${screen.code}</p>
           ${screen.pumps ? `<p>Erogatori: ${screen.pumps.join(', ')}</p>` : ''}
           ${screen.positionDetails ? `<p>Posizione Altro: ${screen.positionDetails}</p>` : ''}
-          ${screen.videoFile ? `<p>File Video: Caricato</p>` : ''}
+          ${screen.videoFile ? `<p>File Video: ${screen.videoFile.name}</p>` : ''}
           <button onclick="assignFileToScreen(${index}, ${screenIndex})">Assegna MP4</button>
-          <button onclick="openScreenSettings(${index}, ${screenIndex})">Impostazioni</button>
         `;
         stationElement.appendChild(screenElement);
       });
 
       stationsContainer.appendChild(stationElement);
     });
-  }
-
-  function generateRandomCode() {
-    return Math.floor(1000 + Math.random() * 9000); // Codice casuale di 4 cifre
   }
 
   function openAddModal() {
@@ -262,91 +244,47 @@
 
   function openScreenModal(index) {
     stationForScreen = index;
-    document.getElementById('screenPasswordModal').classList.add('active');
+    document.getElementById('addScreenModal').classList.add('active');
   }
 
-  function checkScreenPassword() {
-    const password = document.getElementById('screenPassword').value;
-    const errorMessage = document.getElementById('screenPasswordError');
-    if (password === deletePassword) {
-      closeModal('screenPasswordModal');
-      openScreenSettingsModal();
-    } else {
-      errorMessage.style.display = 'block';
-    }
-  }
-
-  function openScreenSettingsModal() {
-    const stationIndex = stationForScreen;
-    const station = JSON.parse(localStorage.getItem('stations'))[stationIndex];
-    
-    screenIndexToEdit = 0; // Assuming only one screen per station
-    const screen = station.screens[screenIndexToEdit];
-    
-    document.getElementById('screenCode').value = screen.code;
-    document.getElementById('screenPositionSettings').value = screen.position;
-    if (screen.position === 'Colonna') {
-      document.getElementById('columnFieldsSettings').style.display = 'block';
-      document.getElementById('otherFieldsSettings').style.display = 'none';
-      document.getElementById('pump1Settings').value = screen.pumps ? screen.pumps[0] : '';
-      document.getElementById('pump2Settings').value = screen.pumps ? screen.pumps[1] : '';
-    } else {
-      document.getElementById('columnFieldsSettings').style.display = 'none';
-      document.getElementById('otherFieldsSettings').style.display = 'block';
-      document.getElementById('screenOtherPositionSettings').value = screen.positionDetails || '';
-    }
-    document.getElementById('screenSettingsModal').classList.add('active');
-  }
-
-  function confirmScreenSettings() {
-    const stationIndex = stationForScreen;
-    const screenIndex = screenIndexToEdit;
-    const updatedScreen = {
-      code: document.getElementById('screenCode').value,
-      position: document.getElementById('screenPositionSettings').value
+  function confirmAddScreen() {
+    const screenPosition = document.getElementById('screenPosition').value;
+    const stations = JSON.parse(localStorage.getItem('stations'));
+    const station = stations[stationForScreen];
+    const screen = {
+      code: `SCH${Math.floor(1000 + Math.random() * 9000)}`, // Codice casuale
+      position: screenPosition,
     };
 
-    if (updatedScreen.position === 'Colonna') {
-      updatedScreen.pumps = [
-        document.getElementById('pump1Settings').value,
-        document.getElementById('pump2Settings').value
+    if (screenPosition === 'Colonna') {
+      screen.pumps = [
+        document.getElementById('pump1').value,
+        document.getElementById('pump2').value,
       ];
-    } else if (updatedScreen.position === 'Altro') {
-      updatedScreen.positionDetails = document.getElementById('screenOtherPositionSettings').value;
+    } else if (screenPosition === 'Altro') {
+      screen.positionDetails = document.getElementById('screenOtherPosition').value;
     }
 
-    const stations = JSON.parse(localStorage.getItem('stations'));
-    stations[stationIndex].screens[screenIndex] = updatedScreen;
+    station.screens.push(screen);
     localStorage.setItem('stations', JSON.stringify(stations));
     loadStations();
-    closeModal('screenSettingsModal');
+    closeModal('addScreenModal');
   }
 
-  function deleteScreen() {
-    const stations = JSON.parse(localStorage.getItem('stations'));
-    stations[stationForScreen].screens.splice(screenIndexToEdit, 1);
-    localStorage.setItem('stations', JSON.stringify(stations));
-    loadStations();
-    closeModal('screenSettingsModal');
-  }
-
-  function openModal(modalId, stationIndex = null) {
-    document.getElementById(modalId).classList.add('active');
-    stationToDelete = stationIndex;
-  }
-
-  function confirmDeleteStation() {
-    const password = document.getElementById('deleteStationPassword').value;
-    const errorMessage = document.getElementById('deleteStationError');
-    if (password === deletePassword) {
-      const stations = JSON.parse(localStorage.getItem('stations'));
-      stations.splice(stationToDelete, 1);
-      localStorage.setItem('stations', JSON.stringify(stations));
-      loadStations();
-      closeModal('deleteStationModal');
-    } else {
-      errorMessage.style.display = 'block';
-    }
+  function assignFileToScreen(stationIndex, screenIndex) {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.mp4';
+    fileInput.onchange = (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const stations = JSON.parse(localStorage.getItem('stations'));
+        stations[stationIndex].screens[screenIndex].videoFile = file;
+        localStorage.setItem('stations', JSON.stringify(stations));
+        loadStations();
+      }
+    };
+    fileInput.click();
   }
 </script>
 </body>
