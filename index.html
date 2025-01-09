@@ -18,35 +18,16 @@
       height: 100vh;
     }
 
-    #login, #main, #modal, #addModal, #screenModal, #columnModal, #otherModal, #screenSettingsModal {
+    #login, #main {
       display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: #1f1f1f;
-      border: 1px solid #ffffff;
-      padding: 20px;
-      z-index: 1000;
+      width: 100%;
+      max-width: 600px;
       text-align: center;
-    }
-
-    #login {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
     }
 
     .error {
       color: red;
       margin-bottom: 10px;
-    }
-
-    #main {
-      display: none;
-      width: 100%;
-      max-width: 600px;
     }
 
     .station {
@@ -69,17 +50,6 @@
       background-color: #ffffff;
       color: #1f1f1f;
     }
-
-    #overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-      z-index: 999;
-    }
   </style>
 </head>
 <body>
@@ -93,49 +63,46 @@
 
 <div id="main">
   <h1>Gestione Stazioni di Servizio</h1>
-  <button onclick="openAddModal()">Aggiungi Stazione di Servizio</button>
   <div id="stations"></div>
-</div>
-
-<div id="addModal">
-  <h2>Aggiungi Stazione di Servizio</h2>
-  <p>Inserisci il codice della sede:</p>
-  <input type="text" id="addStationCode" placeholder="Codice sede">
-  <button onclick="confirmAddStation()">Aggiungi</button>
-  <button onclick="closeAddModal()">Annulla</button>
-</div>
-
-<div id="screenModal">
-  <h2>Aggiungi Schermo</h2>
-  <p>Seleziona la posizione dello schermo:</p>
-  <select id="screenPosition">
-    <option value="Colonna">Colonna</option>
-    <option value="Altro">Altro</option>
-  </select>
-  <button onclick="confirmScreenPosition()">Continua</button>
-  <button onclick="closeScreenModal()">Annulla</button>
-</div>
-
-<div id="columnModal">
-  <h2>Configura Schermo in Colonna</h2>
-  <p>Numeri erogatori:</p>
-  <input type="number" id="pump1" placeholder="Erogatore 1">
-  <input type="number" id="pump2" placeholder="Erogatore 2">
-  <button onclick="confirmColumnScreen()">Aggiungi</button>
-  <button onclick="closeColumnModal()">Annulla</button>
-</div>
-
-<div id="otherModal">
-  <h2>Configura Schermo in Altro</h2>
-  <p>Posizione dello schermo:</p>
-  <input type="text" id="screenOtherPosition" placeholder="Posizione">
-  <button onclick="confirmOtherScreen()">Aggiungi</button>
-  <button onclick="closeOtherModal()">Annulla</button>
 </div>
 
 <script>
   const correctPassword = 'cassetta2';
-  let generatedPasswords = [];
+  const stations = [
+    {
+      code: 's0001',
+      screens: [
+        { code: generateRandomCode(), position: 'Colonna', details: 'Erogatori 1 e 2' },
+        { code: generateRandomCode(), position: 'Colonna', details: 'Erogatori 3 e 4' },
+        { code: generateRandomCode(), position: 'Colonna', details: 'Erogatori 5 e 6' },
+        { code: generateRandomCode(), position: 'Colonna', details: 'Erogatori 7 e 8' },
+        { code: generateRandomCode(), position: 'Altro', details: 'Ufficio' }
+      ]
+    },
+    {
+      code: 's0002',
+      screens: [
+        { code: generateRandomCode(), position: 'Colonna', details: 'Erogatori 1 e 2' },
+        { code: generateRandomCode(), position: 'Colonna', details: 'Erogatori 3 e 4' },
+        { code: generateRandomCode(), position: 'Colonna', details: 'Erogatori 5 e 6' }
+      ]
+    },
+    {
+      code: 's0003',
+      screens: [
+        { code: generateRandomCode(), position: 'Colonna', details: 'Erogatori 1 e 2' }
+      ]
+    },
+    {
+      code: 's0004',
+      screens: [
+        { code: generateRandomCode(), position: 'Colonna', details: 'Erogatori 1 e 2' },
+        { code: generateRandomCode(), position: 'Colonna', details: 'Erogatori 3 e 4' }
+      ]
+    }
+  ];
+
+  let generatedPasswords = stations.flatMap(station => station.screens.map(screen => screen.code));
 
   function checkPassword() {
     const inputPassword = document.getElementById('password').value;
@@ -149,21 +116,20 @@
   }
 
   function loadStations() {
-    const stations = JSON.parse(localStorage.getItem('stations')) || [];
     const stationsContainer = document.getElementById('stations');
     stationsContainer.innerHTML = '';
 
-    stations.forEach((station, stationIndex) => {
+    stations.forEach(station => {
       const stationDiv = document.createElement('div');
       stationDiv.className = 'station';
       stationDiv.innerHTML = `<h3>Stazione: ${station.code}</h3>`;
 
-      station.screens.forEach((screen, screenIndex) => {
+      station.screens.forEach(screen => {
         const screenDiv = document.createElement('div');
         screenDiv.innerHTML = `
           <p>Codice: ${screen.code}</p>
           <p>Posizione: ${screen.position}</p>
-          <p>Dettagli: ${screen.details || 'N/A'}</p>
+          <p>Dettagli: ${screen.details}</p>
         `;
         stationDiv.appendChild(screenDiv);
       });
@@ -172,11 +138,9 @@
     });
   }
 
-  function addStation() {
-    // Code to add station
+  function generateRandomCode() {
+    return Math.floor(1000 + Math.random() * 9000).toString();
   }
-
-  // Other modal functions
 </script>
 
 </body>
