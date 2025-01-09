@@ -67,6 +67,19 @@
       border-radius: 5px;
       margin-top: 10px;
     }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    label {
+      background-color: #1f1f1f;
+      color: #ffffff;
+      padding: 10px;
+      cursor: pointer;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -89,32 +102,32 @@
     {
       code: 's0001',
       screens: [
-        { id: '6918', position: 'Colonna', details: 'Erogatore 1 e 2', videoUrl: 'video1.mp4' },
-        { id: '9831', position: 'Colonna', details: 'Erogatore 3 e 4', videoUrl: 'video2.mp4' },
-        { id: '1742', position: 'Colonna', details: 'Erogatore 5 e 6', videoUrl: 'video3.mp4' },
-        { id: '2839', position: 'Colonna', details: 'Erogatore 7 e 8', videoUrl: 'video4.mp4' },
-        { id: '4298', position: 'Altro', details: 'Posizione ufficio', videoUrl: 'video5.mp4' }
+        { id: '6918', position: 'Colonna', details: 'Erogatore 1 e 2', videoUrl: '' },
+        { id: '9831', position: 'Colonna', details: 'Erogatore 3 e 4', videoUrl: '' },
+        { id: '1742', position: 'Colonna', details: 'Erogatore 5 e 6', videoUrl: '' },
+        { id: '2839', position: 'Colonna', details: 'Erogatore 7 e 8', videoUrl: '' },
+        { id: '4298', position: 'Altro', details: 'Posizione ufficio', videoUrl: '' }
       ]
     },
     {
       code: 's0002',
       screens: [
-        { id: '1103', position: 'Colonna', details: 'Erogatore 1 e 2', videoUrl: 'video6.mp4' },
-        { id: '3298', position: 'Colonna', details: 'Erogatore 3 e 4', videoUrl: 'video7.mp4' },
-        { id: '4402', position: 'Colonna', details: 'Erogatore 5 e 6', videoUrl: 'video8.mp4' }
+        { id: '1103', position: 'Colonna', details: 'Erogatore 1 e 2', videoUrl: '' },
+        { id: '3298', position: 'Colonna', details: 'Erogatore 3 e 4', videoUrl: '' },
+        { id: '4402', position: 'Colonna', details: 'Erogatore 5 e 6', videoUrl: '' }
       ]
     },
     {
       code: 's0003',
       screens: [
-        { id: '5618', position: 'Colonna', details: 'Erogatore 1 e 2', videoUrl: 'video9.mp4' }
+        { id: '5618', position: 'Colonna', details: 'Erogatore 1 e 2', videoUrl: '' }
       ]
     },
     {
       code: 's0004',
       screens: [
-        { id: '8720', position: 'Colonna', details: 'Erogatore 1 e 2', videoUrl: 'video10.mp4' },
-        { id: '9431', position: 'Colonna', details: 'Erogatore 3 e 4', videoUrl: 'video11.mp4' }
+        { id: '8720', position: 'Colonna', details: 'Erogatore 1 e 2', videoUrl: '' },
+        { id: '9431', position: 'Colonna', details: 'Erogatore 3 e 4', videoUrl: '' }
       ]
     }
   ];
@@ -148,16 +161,35 @@
           <p>Codice: ${screen.id}</p>
           <p>Posizione: ${screen.position}</p>
           <p>Dettagli: ${screen.details}</p>
-          <video controls>
-            <source src="${screen.videoUrl}" type="video/mp4">
-            Il tuo browser non supporta il formato video.
-          </video>
+          <div>
+            <video controls>
+              ${screen.videoUrl ? `<source src="${screen.videoUrl}" type="video/mp4">` : ''}
+              Il tuo browser non supporta il formato video.
+            </video>
+            <br>
+            <label for="videoUpload-${screen.id}">Carica video</label>
+            <input type="file" id="videoUpload-${screen.id}" onchange="assignVideo(event, '${screen.id}')">
+          </div>
         `;
         stationElement.appendChild(screenElement);
       });
 
       stationsContainer.appendChild(stationElement);
     });
+  }
+
+  function assignVideo(event, screenId) {
+    const file = event.target.files[0];
+    if (file && file.type === 'video/mp4') {
+      const videoUrl = URL.createObjectURL(file);
+      const station = predefinedStations.flatMap(station => station.screens).find(screen => screen.id === screenId);
+      if (station) {
+        station.videoUrl = videoUrl;
+        loadStations(); // Ricarica la pagina per aggiornare il video
+      }
+    } else {
+      alert('Seleziona un file video in formato .mp4');
+    }
   }
 </script>
 
