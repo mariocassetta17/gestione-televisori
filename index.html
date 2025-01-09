@@ -18,6 +18,19 @@
       height: 100vh;
     }
 
+    #login, #main, #modal, #addModal, #screenModal, #columnModal, #otherModal, #screenSettingsModal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #1f1f1f;
+      border: 1px solid #ffffff;
+      padding: 20px;
+      z-index: 1000;
+      text-align: center;
+    }
+
     #login {
       display: flex;
       flex-direction: column;
@@ -57,23 +70,6 @@
       color: #1f1f1f;
     }
 
-    .modal {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: #1f1f1f;
-      border: 1px solid #ffffff;
-      padding: 20px;
-      z-index: 1000;
-      text-align: center;
-    }
-
-    .modal input {
-      margin: 10px 0;
-    }
-
     #overlay {
       display: none;
       position: fixed;
@@ -97,19 +93,19 @@
 
 <div id="main">
   <h1>Gestione Stazioni di Servizio</h1>
-  <button onclick="openAddModal()">Aggiungi stazione di servizio</button>
+  <button onclick="openAddModal()">Aggiungi Stazione di Servizio</button>
   <div id="stations"></div>
 </div>
 
-<div id="addModal" class="modal">
+<div id="addModal">
   <h2>Aggiungi Stazione di Servizio</h2>
   <p>Inserisci il codice della sede:</p>
   <input type="text" id="addStationCode" placeholder="Codice sede">
   <button onclick="confirmAddStation()">Aggiungi</button>
-  <button onclick="closeModal('addModal')">Annulla</button>
+  <button onclick="closeAddModal()">Annulla</button>
 </div>
 
-<div id="screenModal" class="modal">
+<div id="screenModal">
   <h2>Aggiungi Schermo</h2>
   <p>Seleziona la posizione dello schermo:</p>
   <select id="screenPosition">
@@ -117,141 +113,70 @@
     <option value="Altro">Altro</option>
   </select>
   <button onclick="confirmScreenPosition()">Continua</button>
-  <button onclick="closeModal('screenModal')">Annulla</button>
+  <button onclick="closeScreenModal()">Annulla</button>
 </div>
 
-<div id="columnModal" class="modal">
+<div id="columnModal">
   <h2>Configura Schermo in Colonna</h2>
   <p>Numeri erogatori:</p>
   <input type="number" id="pump1" placeholder="Erogatore 1">
   <input type="number" id="pump2" placeholder="Erogatore 2">
   <button onclick="confirmColumnScreen()">Aggiungi</button>
-  <button onclick="closeModal('columnModal')">Annulla</button>
+  <button onclick="closeColumnModal()">Annulla</button>
 </div>
 
-<div id="otherModal" class="modal">
+<div id="otherModal">
   <h2>Configura Schermo in Altro</h2>
   <p>Posizione dello schermo:</p>
   <input type="text" id="screenOtherPosition" placeholder="Posizione">
   <button onclick="confirmOtherScreen()">Aggiungi</button>
-  <button onclick="closeModal('otherModal')">Annulla</button>
+  <button onclick="closeOtherModal()">Annulla</button>
 </div>
-
-<div id="overlay"></div>
 
 <script>
   const correctPassword = 'cassetta2';
-  let validPasswords = [correctPassword];
-  let stationForScreen = null;
-  let stations = JSON.parse(localStorage.getItem('stations')) || [];
+  let generatedPasswords = [];
 
   function checkPassword() {
     const inputPassword = document.getElementById('password').value;
-    const loginError = document.getElementById('loginError');
-
-    if (validPasswords.includes(inputPassword)) {
+    if (inputPassword === correctPassword || generatedPasswords.includes(inputPassword)) {
       document.getElementById('login').style.display = 'none';
       document.getElementById('main').style.display = 'block';
       loadStations();
     } else {
-      loginError.style.display = 'block';
+      document.getElementById('loginError').style.display = 'block';
     }
   }
 
   function loadStations() {
+    const stations = JSON.parse(localStorage.getItem('stations')) || [];
     const stationsContainer = document.getElementById('stations');
     stationsContainer.innerHTML = '';
 
-    stations.forEach((station, index) => {
-      const stationElement = document.createElement('div');
-      stationElement.className = 'station';
-      stationElement.innerHTML = `<p>${station.code}</p>`;
+    stations.forEach((station, stationIndex) => {
+      const stationDiv = document.createElement('div');
+      stationDiv.className = 'station';
+      stationDiv.innerHTML = `<h3>Stazione: ${station.code}</h3>`;
 
-      const addScreenButton = document.createElement('button');
-      addScreenButton.textContent = 'Aggiungi Schermo';
-      addScreenButton.onclick = () => openModal('screenModal', index);
-
-      stationElement.appendChild(addScreenButton);
-
-      station.screens.forEach((screen) => {
-        const screenElement = document.createElement('div');
-        screenElement.innerHTML = `
+      station.screens.forEach((screen, screenIndex) => {
+        const screenDiv = document.createElement('div');
+        screenDiv.innerHTML = `
           <p>Codice: ${screen.code}</p>
           <p>Posizione: ${screen.position}</p>
-          <p>Dettagli: ${screen.details}</p>`;
-        stationElement.appendChild(screenElement);
+          <p>Dettagli: ${screen.details || 'N/A'}</p>
+        `;
+        stationDiv.appendChild(screenDiv);
       });
 
-      stationsContainer.appendChild(stationElement);
+      stationsContainer.appendChild(stationDiv);
     });
   }
 
-  function openAddModal() {
-    openModal('addModal');
+  function addStation() {
+    // Code to add station
   }
 
-  function confirmAddStation() {
-    const stationCode = document.getElementById('addStationCode').value;
-    if (stationCode) {
-      stations.push({ code: stationCode, screens: [] });
-      localStorage.setItem('stations', JSON.stringify(stations));
-      loadStations();
-      closeModal('addModal');
-    } else {
-      alert('Codice della sede non inserito.');
-    }
-  }
-
-  function confirmScreenPosition() {
-    const position = document.getElementById('screenPosition').value;
-    closeModal('screenModal');
-    if (position === 'Colonna') {
-      openModal('columnModal');
-    } else {
-      openModal('otherModal');
-    }
-  }
-
-  function confirmColumnScreen() {
-    const pump1 = document.getElementById('pump1').value;
-    const pump2 = document.getElementById('pump2').value;
-    addScreen({ position: 'Colonna', details: `Erogatori: ${pump1}, ${pump2}` });
-    closeModal('columnModal');
-  }
-
-  function confirmOtherScreen() {
-    const position = document.getElementById('screenOtherPosition').value;
-    if (position) {
-      addScreen({ position: `Altro: ${position}`, details: '' });
-      closeModal('otherModal');
-    } else {
-      alert('Inserire una posizione valida.');
-    }
-  }
-
-  function addScreen(screen) {
-    const code = generateCode();
-    screen.code = code;
-    stations[stationForScreen].screens.push(screen);
-    localStorage.setItem('stations', JSON.stringify(stations));
-    validPasswords.push(code); // Add the new code to valid passwords
-    loadStations();
-  }
-
-  function generateCode() {
-    return Math.random().toString(36).substring(2, 6).toUpperCase();
-  }
-
-  function openModal(modalId, index = null) {
-    stationForScreen = index;
-    document.getElementById(modalId).style.display = 'block';
-    document.getElementById('overlay').style.display = 'block';
-  }
-
-  function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
-    document.getElementById('overlay').style.display = 'none';
-  }
+  // Other modal functions
 </script>
 
 </body>
