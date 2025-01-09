@@ -22,27 +22,32 @@
       justify-content: center;
       height: 100vh;
     }
+
     #login {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 10px;
     }
+
     .error {
       color: red;
       margin-bottom: 10px;
     }
+
     #main {
       display: none;
       width: 100%;
       max-width: 600px;
     }
+
     .station {
       margin: 10px 0;
       padding: 10px;
       border: 1px solid #ffffff;
       border-radius: 5px;
     }
+
     button {
       background-color: #1f1f1f;
       color: #ffffff;
@@ -51,6 +56,7 @@
       cursor: pointer;
       border-radius: 5px;
     }
+
     button:hover {
       background-color: #ffffff;
       color: #1f1f1f;
@@ -66,28 +72,34 @@
   <input type="email" id="loginEmail" placeholder="Email" required>
   <input type="password" id="loginPassword" placeholder="Password" required>
   <button onclick="loginUser()">Accedi</button>
-  <h2>O registrati</h2>
+</div>
+
+<!-- Form di registrazione -->
+<div id="registerForm" style="display:none;">
+  <h1>Registrati</h1>
   <input type="email" id="email" placeholder="Email" required>
   <input type="password" id="password" placeholder="Password" required>
   <button onclick="registerUser()">Registrati</button>
 </div>
 
-<!-- Sezione principale, visibile solo dopo il login -->
+<!-- Interfaccia principale dopo il login -->
 <div id="main">
   <h1>Gestione Stazioni di Servizio</h1>
   <div id="stations"></div>
 
-  <h3>Carica un video per un dispositivo</h3>
+  <!-- Form per caricare un video -->
+  <h3>Carica un Video</h3>
   <input type="file" id="videoUpload" onchange="uploadVideo(event)">
-  <br><br>
-  <h3>Aggiungi una stazione</h3>
+  
+  <!-- Form per aggiungere una stazione -->
+  <h3>Aggiungi una Stazione</h3>
   <input type="text" id="stationCode" placeholder="Codice Stazione" required>
   <input type="text" id="screenDetails" placeholder="Dettagli Schermo" required>
   <button onclick="addStation()">Aggiungi Stazione</button>
 </div>
 
 <script>
-  // Configurazione di Firebase
+  // Firebase configuration
   const firebaseConfig = {
     apiKey: "AIzaSyAGvdvtDxC1RMnORDpX-GfSgr2JrbX83Yo",
     authDomain: "schermi-cassetta.firebaseapp.com",
@@ -98,13 +110,13 @@
     measurementId: "G-30TCD9TFKF"
   };
 
-  // Inizializzazione di Firebase
+  // Inizializza Firebase
   const app = firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
   const storage = firebase.storage();
 
-  // Funzione per il login
+  // Funzione di login
   function loginUser() {
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
@@ -123,7 +135,7 @@
       });
   }
 
-  // Funzione per registrare un nuovo utente
+  // Funzione di registrazione
   function registerUser() {
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
@@ -132,6 +144,8 @@
       .then(userCredential => {
         const user = userCredential.user;
         alert('Utente registrato con successo!');
+        document.getElementById('registerForm').style.display = 'none';
+        document.getElementById('login').style.display = 'block';
       })
       .catch(error => {
         console.error(error.message);
@@ -142,7 +156,7 @@
   // Funzione per caricare un video
   function uploadVideo(event) {
     const file = event.target.files[0];
-    const screenId = 'screen001';  // Usa un ID personalizzato per ogni schermo
+    const screenId = 'screen001';  // Puoi modificarlo in base allo schermo o ID
     const storageRef = firebase.storage().ref('videos/' + screenId + '.mp4');
     const uploadTask = storageRef.put(file);
 
@@ -163,7 +177,7 @@
     );
   }
 
-  // Funzione per aggiungere una nuova stazione
+  // Funzione per aggiungere una stazione
   function addStation() {
     const stationCode = document.getElementById('stationCode').value;
     const screenDetails = document.getElementById('screenDetails').value;
@@ -175,6 +189,7 @@
     .then(docRef => {
       console.log('Stazione aggiunta con ID:', docRef.id);
       alert('Stazione aggiunta con successo!');
+      loadStations();
     })
     .catch(error => {
       console.error('Errore nell\'aggiungere la stazione:', error);
@@ -182,28 +197,30 @@
     });
   }
 
-  // Funzione per caricare e visualizzare le stazioni salvate in Firestore
+  // Funzione per caricare le stazioni da Firestore
   function loadStations() {
     const stationsContainer = document.getElementById('stations');
     stationsContainer.innerHTML = '';
 
-    db.collection('stations').get()
-      .then(querySnapshot => {
-        querySnapshot.forEach(doc => {
-          const station = doc.data();
-          const stationElement = document.createElement('div');
-          stationElement.className = 'station';
-          stationElement.innerHTML = `
-            <h2>Stazione: ${station.code}</h2>
-            <div>
-              ${station.screens.map(screen => `
-                <p>Dettagli Schermo: ${screen.details}</p>
-              `).join('')}
-            </div>
+    firebase.firestore().collection('stations').get().then(querySnapshot => {
+      querySnapshot.forEach(doc => {
+        const station = doc.data();
+        const stationElement = document.createElement('div');
+        stationElement.className = 'station';
+        stationElement.innerHTML = `<h2>Stazione: ${station.code}</h2>`;
+        
+        station.screens.forEach(screen => {
+          const screenElement = document.createElement('div');
+          screenElement.className = 'station';
+          screenElement.innerHTML = `
+            <p>Dettagli: ${screen.details}</p>
           `;
-          stationsContainer.appendChild(stationElement);
+          stationElement.appendChild(screenElement);
         });
+
+        stationsContainer.appendChild(stationElement);
       });
+    });
   }
 </script>
 
