@@ -18,16 +18,22 @@
       height: 100vh;
     }
 
-    #login, #main {
-      display: none;
-      width: 100%;
-      max-width: 600px;
-      text-align: center;
+    #login {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
     }
 
     .error {
       color: red;
       margin-bottom: 10px;
+    }
+
+    #main {
+      display: none;
+      width: 100%;
+      max-width: 600px;
     }
 
     .station {
@@ -68,50 +74,54 @@
 
 <script>
   const correctPassword = 'cassetta2';
-  const stations = [
+  const predefinedStations = [
     {
       code: 's0001',
       screens: [
-        { code: generateRandomCode(), position: 'Colonna', details: 'Erogatori 1 e 2' },
-        { code: generateRandomCode(), position: 'Colonna', details: 'Erogatori 3 e 4' },
-        { code: generateRandomCode(), position: 'Colonna', details: 'Erogatori 5 e 6' },
-        { code: generateRandomCode(), position: 'Colonna', details: 'Erogatori 7 e 8' },
-        { code: generateRandomCode(), position: 'Altro', details: 'Ufficio' }
+        { id: '6918', position: 'Colonna', details: 'Erogatore 1 e 2', password: '6918' },
+        { id: '9831', position: 'Colonna', details: 'Erogatore 3 e 4', password: '9831' },
+        { id: '1742', position: 'Colonna', details: 'Erogatore 5 e 6', password: '1742' },
+        { id: '2839', position: 'Colonna', details: 'Erogatore 7 e 8', password: '2839' },
+        { id: '4298', position: 'Altro', details: 'Posizione ufficio', password: '4298' }
       ]
     },
     {
       code: 's0002',
       screens: [
-        { code: generateRandomCode(), position: 'Colonna', details: 'Erogatori 1 e 2' },
-        { code: generateRandomCode(), position: 'Colonna', details: 'Erogatori 3 e 4' },
-        { code: generateRandomCode(), position: 'Colonna', details: 'Erogatori 5 e 6' }
+        { id: '1103', position: 'Colonna', details: 'Erogatore 1 e 2', password: '1103' },
+        { id: '3298', position: 'Colonna', details: 'Erogatore 3 e 4', password: '3298' },
+        { id: '4402', position: 'Colonna', details: 'Erogatore 5 e 6', password: '4402' }
       ]
     },
     {
       code: 's0003',
       screens: [
-        { code: generateRandomCode(), position: 'Colonna', details: 'Erogatori 1 e 2' }
+        { id: '5618', position: 'Colonna', details: 'Erogatore 1 e 2', password: '5618' }
       ]
     },
     {
       code: 's0004',
       screens: [
-        { code: generateRandomCode(), position: 'Colonna', details: 'Erogatori 1 e 2' },
-        { code: generateRandomCode(), position: 'Colonna', details: 'Erogatori 3 e 4' }
+        { id: '8720', position: 'Colonna', details: 'Erogatore 1 e 2', password: '8720' },
+        { id: '9431', position: 'Colonna', details: 'Erogatore 3 e 4', password: '9431' }
       ]
     }
   ];
 
-  let generatedPasswords = stations.flatMap(station => station.screens.map(screen => screen.code));
-
   function checkPassword() {
     const inputPassword = document.getElementById('password').value;
-    if (inputPassword === correctPassword || generatedPasswords.includes(inputPassword)) {
+    const loginError = document.getElementById('loginError');
+
+    const found = predefinedStations.some(station =>
+      station.screens.some(screen => screen.password === inputPassword)
+    );
+
+    if (inputPassword === correctPassword || found) {
       document.getElementById('login').style.display = 'none';
       document.getElementById('main').style.display = 'block';
       loadStations();
     } else {
-      document.getElementById('loginError').style.display = 'block';
+      loginError.style.display = 'block';
     }
   }
 
@@ -119,27 +129,24 @@
     const stationsContainer = document.getElementById('stations');
     stationsContainer.innerHTML = '';
 
-    stations.forEach(station => {
-      const stationDiv = document.createElement('div');
-      stationDiv.className = 'station';
-      stationDiv.innerHTML = `<h3>Stazione: ${station.code}</h3>`;
+    predefinedStations.forEach(station => {
+      const stationElement = document.createElement('div');
+      stationElement.className = 'station';
+      stationElement.innerHTML = `<h2>Stazione: ${station.code}</h2>`;
 
       station.screens.forEach(screen => {
-        const screenDiv = document.createElement('div');
-        screenDiv.innerHTML = `
-          <p>Codice: ${screen.code}</p>
+        const screenElement = document.createElement('div');
+        screenElement.className = 'station';
+        screenElement.innerHTML = `
+          <p>Codice: ${screen.id}</p>
           <p>Posizione: ${screen.position}</p>
           <p>Dettagli: ${screen.details}</p>
         `;
-        stationDiv.appendChild(screenDiv);
+        stationElement.appendChild(screenElement);
       });
 
-      stationsContainer.appendChild(stationDiv);
+      stationsContainer.appendChild(stationElement);
     });
-  }
-
-  function generateRandomCode() {
-    return Math.floor(1000 + Math.random() * 9000).toString();
   }
 </script>
 
