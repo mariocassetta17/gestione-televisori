@@ -70,7 +70,7 @@
       text-align: center;
     }
 
-    .modal input, .modal select {
+    .modal input {
       margin: 10px 0;
     }
 
@@ -101,78 +101,35 @@
   <div id="stations"></div>
 </div>
 
-<!-- Modali -->
 <div id="addModal" class="modal">
   <h2>Aggiungi Stazione di Servizio</h2>
   <p>Inserisci il codice della sede:</p>
   <input type="text" id="addStationCode" placeholder="Codice sede">
   <button onclick="confirmAddStation()">Aggiungi</button>
-  <button onclick="closeModal('addModal')">Annulla</button>
-</div>
-
-<div id="screenModal" class="modal">
-  <h2>Aggiungi Schermo</h2>
-  <p>Seleziona la posizione dello schermo:</p>
-  <select id="screenPosition">
-    <option value="Colonna">Colonna</option>
-    <option value="Altro">Altro</option>
-  </select>
-  <button onclick="confirmScreenPosition()">Continua</button>
-  <button onclick="closeModal('screenModal')">Annulla</button>
-</div>
-
-<div id="columnModal" class="modal">
-  <h2>Configura Schermo in Colonna</h2>
-  <p>Numeri erogatori:</p>
-  <input type="number" id="pump1" placeholder="Erogatore 1">
-  <input type="number" id="pump2" placeholder="Erogatore 2">
-  <button onclick="confirmColumnScreen()">Aggiungi</button>
-  <button onclick="closeModal('columnModal')">Annulla</button>
-</div>
-
-<div id="otherModal" class="modal">
-  <h2>Configura Schermo in Altro</h2>
-  <p>Posizione dello schermo:</p>
-  <input type="text" id="screenOtherPosition" placeholder="Posizione">
-  <button onclick="confirmOtherScreen()">Aggiungi</button>
-  <button onclick="closeModal('otherModal')">Annulla</button>
+  <button onclick="closeAddModal()">Annulla</button>
 </div>
 
 <div id="overlay"></div>
 
 <script>
   const correctPassword = 'cassetta2';
-  const stations = JSON.parse(localStorage.getItem('stations')) || [];
-  let stationToDelete = null;
-  let stationForScreen = null;
-  let screenToManage = null;
+  let screenPasswords = []; // Lista delle password generate per gli schermi
 
   function checkPassword() {
     const inputPassword = document.getElementById('password').value;
     const loginError = document.getElementById('loginError');
-    
-    if (inputPassword === correctPassword || isScreenPassword(inputPassword)) {
+
+    if (inputPassword === correctPassword || screenPasswords.includes(inputPassword)) {
       document.getElementById('login').style.display = 'none';
       document.getElementById('main').style.display = 'block';
-      loadStations(inputPassword);
+      loadStations();
     } else {
       loginError.style.display = 'block';
     }
   }
 
-  function isScreenPassword(password) {
-    for (const station of stations) {
-      for (const screen of station.screens) {
-        if (screen.code === password) {
-          screenToManage = screen;
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  function loadStations(filterPassword = null) {
+  function loadStations() {
+    const stations = JSON.parse(localStorage.getItem('stations')) || [];
     const stationsContainer = document.getElementById('stations');
     stationsContainer.innerHTML = '';
 
@@ -181,69 +138,75 @@
       stationElement.className = 'station';
       stationElement.innerHTML = `<p>${station.code}</p>`;
 
-      if (!filterPassword) {
-        const addScreenButton = document.createElement('button');
-        addScreenButton.textContent = 'Aggiungi Schermo';
-        addScreenButton.onclick = () => openModal('screenModal', index);
-        stationElement.appendChild(addScreenButton);
-      }
-
-      station.screens.forEach((screen) => {
-        if (!filterPassword || screen.code === filterPassword) {
-          const screenElement = document.createElement('div');
-          screenElement.innerHTML = `<p>Schermo ${screen.code}: ${screen.position}</p>`;
-          stationElement.appendChild(screenElement);
-        }
+      station.screens.forEach((screen, screenIndex) => {
+        const screenElement = document.createElement('div');
+        screenElement.innerHTML = `
+          <p>Schermo ${screenIndex + 1}: Posizione - ${screen.position}, Codice - ${screen.code}</p>
+          <button onclick="openSettingsModal(${index}, ${screenIndex})">Impostazioni</button>
+        `;
+        stationElement.appendChild(screenElement);
       });
 
       stationsContainer.appendChild(stationElement);
     });
   }
 
-  function openModal(modalId, stationIndex = null) {
-    document.getElementById(modalId).style.display = 'block';
+  function openAddModal() {
+    document.getElementById('addModal').style.display = 'block';
     document.getElementById('overlay').style.display = 'block';
-    if (stationIndex !== null) {
-      stationForScreen = stationIndex;
-    }
   }
 
-  function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
+  function closeAddModal() {
+    document.getElementById('addModal').style.display = 'none';
     document.getElementById('overlay').style.display = 'none';
   }
 
-  function confirmScreenPosition() {
-    const position = document.getElementById('screenPosition').value;
-    closeModal('screenModal');
-    if (position === 'Colonna') {
-      openModal('columnModal');
+  function confirmAddStation() {
+    const stationCode = document.getElementById('addStationCode').value;
+    if (stationCode) {
+      addStation(stationCode);
+      closeAddModal();
     } else {
-      openModal('otherModal');
+      alert('Codice della sede non inserito.');
     }
   }
 
-  function confirmColumnScreen() {
-    const pump1 = document.getElementById('pump1').value;
-    const pump2 = document.getElementById('pump2').value;
-    addScreen({ position: `Colonna (Erogatori: ${pump1}, ${pump2})`, code: generateCode() });
-    closeModal('columnModal');
-  }
-
-  function confirmOtherScreen() {
-    const position = document.getElementById('screenOtherPosition').value;
-    addScreen({ position: `Altro: ${position}`, code: generateCode() });
-    closeModal('otherModal');
-  }
-
-  function addScreen(screen) {
-    stations[stationForScreen].screens.push(screen);
+  function addStation(stationCode) {
+    const stations = JSON.parse(localStorage.getItem('stations')) || [];
+    stations.push({ code: stationCode, screens: [] });
     localStorage.setItem('stations', JSON.stringify(stations));
     loadStations();
   }
 
-  function generateCode() {
-    return Math.random().toString(36).substring(2, 7).toUpperCase();
+  function generateScreenCode() {
+    const code = Math.random().toString(36).substr(2, 5).toUpperCase();
+    screenPasswords.push(code);
+    return code;
+  }
+
+  function addScreen(stationIndex, position) {
+    const stations = JSON.parse(localStorage.getItem('stations')) || [];
+    const screenCode = generateScreenCode();
+    stations[stationIndex].screens.push({ position, code: screenCode });
+    localStorage.setItem('stations', JSON.stringify(stations));
+    loadStations();
+  }
+
+  function openSettingsModal(stationIndex, screenIndex) {
+    const password = prompt('Inserisci la password per accedere alle impostazioni:');
+    if (password === correctPassword) {
+      const stations = JSON.parse(localStorage.getItem('stations')) || [];
+      const screen = stations[stationIndex].screens[screenIndex];
+
+      const newPosition = prompt('Modifica la posizione dello schermo:', screen.position);
+      if (newPosition) {
+        screen.position = newPosition;
+        localStorage.setItem('stations', JSON.stringify(stations));
+        loadStations();
+      }
+    } else {
+      alert('Password errata.');
+    }
   }
 </script>
 
