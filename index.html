@@ -6,7 +6,6 @@
   <title>Gestione Stazioni di Servizio</title>
   <!-- Includi le librerie di Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-storage.js"></script>
   <style>
@@ -69,17 +68,8 @@
 <div id="login">
   <h1>Accedi</h1>
   <p id="loginError" class="error" style="display: none;">Password errata</p>
-  <input type="email" id="loginEmail" placeholder="Email" required>
-  <input type="password" id="loginPassword" placeholder="Password" required>
-  <button onclick="loginUser()">Accedi</button>
-</div>
-
-<!-- Form di registrazione -->
-<div id="registerForm" style="display:none;">
-  <h1>Registrati</h1>
-  <input type="email" id="email" placeholder="Email" required>
-  <input type="password" id="password" placeholder="Password" required>
-  <button onclick="registerUser()">Registrati</button>
+  <input type="password" id="password" placeholder="Inserisci password">
+  <button onclick="checkPassword()">Entra</button>
 </div>
 
 <!-- Interfaccia principale dopo il login -->
@@ -112,45 +102,24 @@
 
   // Inizializza Firebase
   const app = firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
   const db = firebase.firestore();
   const storage = firebase.storage();
 
+  const correctPassword = 'cassetta2';  // Password fissa per l'accesso
+
   // Funzione di login
-  function loginUser() {
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
+  function checkPassword() {
+    const inputPassword = document.getElementById('password').value;
+    const loginError = document.getElementById('loginError');
 
-    firebase.auth().signInWithEmailAndPassword(email, password)
-      .then(userCredential => {
-        const user = userCredential.user;
-        alert('Login effettuato con successo!');
-        document.getElementById('login').style.display = 'none';
-        document.getElementById('main').style.display = 'block';
-        loadStations();
-      })
-      .catch(error => {
-        console.error(error.message);
-        alert('Errore durante il login');
-      });
-  }
-
-  // Funzione di registrazione
-  function registerUser() {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-
-    firebase.auth().createUserWithEmailAndPassword(email, password)
-      .then(userCredential => {
-        const user = userCredential.user;
-        alert('Utente registrato con successo!');
-        document.getElementById('registerForm').style.display = 'none';
-        document.getElementById('login').style.display = 'block';
-      })
-      .catch(error => {
-        console.error(error.message);
-        alert('Errore durante la registrazione');
-      });
+    // Controlla se la password inserita è corretta
+    if (inputPassword === correctPassword) {
+      document.getElementById('login').style.display = 'none';
+      document.getElementById('main').style.display = 'block';
+      loadStations();  // Carica le stazioni di servizio
+    } else {
+      loginError.style.display = 'block';  // Mostra errore se la password è sbagliata
+    }
   }
 
   // Funzione per caricare un video
