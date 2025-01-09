@@ -78,37 +78,37 @@
 </div>
 
 <script>
-  const correctPassword = 'cassetta2';
+  const correctPassword = 'cassetta2'; // La password principale
   const predefinedStations = [
     {
       code: 's0001',
       screens: [
-        { id: '6918', position: 'Colonna', details: 'Erogatore 1 e 2', password: '6918' },
-        { id: '9831', position: 'Colonna', details: 'Erogatore 3 e 4', password: '9831' },
-        { id: '1742', position: 'Colonna', details: 'Erogatore 5 e 6', password: '1742' },
-        { id: '2839', position: 'Colonna', details: 'Erogatore 7 e 8', password: '2839' },
-        { id: '4298', position: 'Altro', details: 'Posizione ufficio', password: '4298' }
+        { id: '6918', position: 'Colonna', details: 'Erogatore 1 e 2' },
+        { id: '9831', position: 'Colonna', details: 'Erogatore 3 e 4' },
+        { id: '1742', position: 'Colonna', details: 'Erogatore 5 e 6' },
+        { id: '2839', position: 'Colonna', details: 'Erogatore 7 e 8' },
+        { id: '4298', position: 'Altro', details: 'Posizione ufficio' }
       ]
     },
     {
       code: 's0002',
       screens: [
-        { id: '1103', position: 'Colonna', details: 'Erogatore 1 e 2', password: '1103' },
-        { id: '3298', position: 'Colonna', details: 'Erogatore 3 e 4', password: '3298' },
-        { id: '4402', position: 'Colonna', details: 'Erogatore 5 e 6', password: '4402' }
+        { id: '1103', position: 'Colonna', details: 'Erogatore 1 e 2' },
+        { id: '3298', position: 'Colonna', details: 'Erogatore 3 e 4' },
+        { id: '4402', position: 'Colonna', details: 'Erogatore 5 e 6' }
       ]
     },
     {
       code: 's0003',
       screens: [
-        { id: '5618', position: 'Colonna', details: 'Erogatore 1 e 2', password: '5618' }
+        { id: '5618', position: 'Colonna', details: 'Erogatore 1 e 2' }
       ]
     },
     {
       code: 's0004',
       screens: [
-        { id: '8720', position: 'Colonna', details: 'Erogatore 1 e 2', password: '8720' },
-        { id: '9431', position: 'Colonna', details: 'Erogatore 3 e 4', password: '9431' }
+        { id: '8720', position: 'Colonna', details: 'Erogatore 1 e 2' },
+        { id: '9431', position: 'Colonna', details: 'Erogatore 3 e 4' }
       ]
     }
   ];
@@ -117,16 +117,13 @@
     const inputPassword = document.getElementById('password').value;
     const loginError = document.getElementById('loginError');
 
-    const found = predefinedStations.some(station =>
-      station.screens.some(screen => screen.password === inputPassword)
-    );
-
-    if (inputPassword === correctPassword || found) {
+    // Controlliamo solo la password principale
+    if (inputPassword === correctPassword) {
       document.getElementById('login').style.display = 'none';
       document.getElementById('main').style.display = 'block';
       loadStations();
     } else {
-      loginError.style.display = 'block';
+      loginError.style.display = 'block'; // Mostra errore se la password è sbagliata
     }
   }
 
