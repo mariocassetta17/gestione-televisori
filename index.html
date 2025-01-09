@@ -4,10 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gestione Stazioni di Servizio</title>
-  <!-- Includi le librerie di Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-storage.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -20,6 +16,7 @@
       align-items: center;
       justify-content: center;
       height: 100vh;
+      overflow: hidden;
     }
 
     #login {
@@ -38,6 +35,9 @@
       display: none;
       width: 100%;
       max-width: 600px;
+      overflow-y: auto;
+      max-height: 90vh;
+      padding: 20px;
     }
 
     .station {
@@ -45,6 +45,7 @@
       padding: 10px;
       border: 1px solid #ffffff;
       border-radius: 5px;
+      background-color: #1f1f1f;
     }
 
     button {
@@ -60,11 +61,33 @@
       background-color: #ffffff;
       color: #1f1f1f;
     }
+
+    video {
+      width: 100%;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    label {
+      background-color: #1f1f1f;
+      color: #ffffff;
+      padding: 10px;
+      cursor: pointer;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+
+    .control-button {
+      margin-top: 15px;
+    }
   </style>
 </head>
 <body>
 
-<!-- Form di login -->
 <div id="login">
   <h1>Accedi</h1>
   <p id="loginError" class="error" style="display: none;">Password errata</p>
@@ -72,124 +95,126 @@
   <button onclick="checkPassword()">Entra</button>
 </div>
 
-<!-- Interfaccia principale dopo il login -->
 <div id="main">
   <h1>Gestione Stazioni di Servizio</h1>
   <div id="stations"></div>
-
-  <!-- Form per caricare un video -->
-  <h3>Carica un Video</h3>
-  <input type="file" id="videoUpload" onchange="uploadVideo(event)">
-  
-  <!-- Form per aggiungere una stazione -->
-  <h3>Aggiungi una Stazione</h3>
-  <input type="text" id="stationCode" placeholder="Codice Stazione" required>
-  <input type="text" id="screenDetails" placeholder="Dettagli Schermo" required>
-  <button onclick="addStation()">Aggiungi Stazione</button>
 </div>
 
 <script>
-  // Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyAGvdvtDxC1RMnORDpX-GfSgr2JrbX83Yo",
-    authDomain: "schermi-cassetta.firebaseapp.com",
-    projectId: "schermi-cassetta",
-    storageBucket: "schermi-cassetta.appspot.com",
-    messagingSenderId: "221024220664",
-    appId: "1:221024220664:web:e77584f083d03b5b1d120d",
-    measurementId: "G-30TCD9TFKF"
-  };
+  const correctPassword = 'cassetta2';
+  const predefinedStations = [
+    {
+      code: 's0001',
+      screens: [
+        { id: '6918', position: 'Colonna', details: 'Erogatore 1 e 2', videoUrl: '' },
+        { id: '9831', position: 'Colonna', details: 'Erogatore 3 e 4', videoUrl: '' },
+        { id: '1742', position: 'Colonna', details: 'Erogatore 5 e 6', videoUrl: '' },
+        { id: '2839', position: 'Colonna', details: 'Erogatore 7 e 8', videoUrl: '' },
+        { id: '4298', position: 'Altro', details: 'Posizione ufficio', videoUrl: '' }
+      ]
+    },
+    {
+      code: 's0002',
+      screens: [
+        { id: '1103', position: 'Colonna', details: 'Erogatore 1 e 2', videoUrl: '' },
+        { id: '3298', position: 'Colonna', details: 'Erogatore 3 e 4', videoUrl: '' },
+        { id: '4402', position: 'Colonna', details: 'Erogatore 5 e 6', videoUrl: '' }
+      ]
+    },
+    {
+      code: 's0003',
+      screens: [
+        { id: '5618', position: 'Colonna', details: 'Erogatore 1 e 2', videoUrl: '' }
+      ]
+    },
+    {
+      code: 's0004',
+      screens: [
+        { id: '8720', position: 'Colonna', details: 'Erogatore 1 e 2', videoUrl: '' },
+        { id: '9431', position: 'Colonna', details: 'Erogatore 3 e 4', videoUrl: '' }
+      ]
+    }
+  ];
 
-  // Inizializza Firebase
-  const app = firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-  const storage = firebase.storage();
-
-  const correctPassword = 'cassetta2';  // Password fissa per l'accesso
-
-  // Funzione di login
   function checkPassword() {
     const inputPassword = document.getElementById('password').value;
     const loginError = document.getElementById('loginError');
 
-    // Controlla se la password inserita è corretta
     if (inputPassword === correctPassword) {
       document.getElementById('login').style.display = 'none';
       document.getElementById('main').style.display = 'block';
-      loadStations();  // Carica le stazioni di servizio
+      loadStations();
     } else {
-      loginError.style.display = 'block';  // Mostra errore se la password è sbagliata
+      loginError.style.display = 'block';
     }
   }
 
-  // Funzione per caricare un video
-  function uploadVideo(event) {
-    const file = event.target.files[0];
-    const screenId = 'screen001';  // Puoi modificarlo in base allo schermo o ID
-    const storageRef = firebase.storage().ref('videos/' + screenId + '.mp4');
-    const uploadTask = storageRef.put(file);
-
-    uploadTask.on('state_changed', 
-      function(snapshot) {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        console.log('Caricamento: ' + progress + '%');
-      }, 
-      function(error) {
-        console.error('Errore nel caricamento:', error);
-      }, 
-      function() {
-        uploadTask.snapshot.ref.getDownloadURL().then(function(downloadURL) {
-          console.log('URL del video caricato:', downloadURL);
-          alert('Video caricato con successo!');
-        });
-      }
-    );
-  }
-
-  // Funzione per aggiungere una stazione
-  function addStation() {
-    const stationCode = document.getElementById('stationCode').value;
-    const screenDetails = document.getElementById('screenDetails').value;
-
-    firebase.firestore().collection('stations').add({
-      code: stationCode,
-      screens: [{ details: screenDetails }]
-    })
-    .then(docRef => {
-      console.log('Stazione aggiunta con ID:', docRef.id);
-      alert('Stazione aggiunta con successo!');
-      loadStations();
-    })
-    .catch(error => {
-      console.error('Errore nell\'aggiungere la stazione:', error);
-      alert('Errore nell\'aggiungere la stazione');
-    });
-  }
-
-  // Funzione per caricare le stazioni da Firestore
   function loadStations() {
     const stationsContainer = document.getElementById('stations');
     stationsContainer.innerHTML = '';
 
-    firebase.firestore().collection('stations').get().then(querySnapshot => {
-      querySnapshot.forEach(doc => {
-        const station = doc.data();
-        const stationElement = document.createElement('div');
-        stationElement.className = 'station';
-        stationElement.innerHTML = `<h2>Stazione: ${station.code}</h2>`;
-        
-        station.screens.forEach(screen => {
-          const screenElement = document.createElement('div');
-          screenElement.className = 'station';
-          screenElement.innerHTML = `
-            <p>Dettagli: ${screen.details}</p>
-          `;
-          stationElement.appendChild(screenElement);
-        });
+    predefinedStations.forEach(station => {
+      const stationElement = document.createElement('div');
+      stationElement.className = 'station';
+      stationElement.innerHTML = `<h2>Stazione: ${station.code}</h2>`;
 
-        stationsContainer.appendChild(stationElement);
+      station.screens.forEach(screen => {
+        const screenElement = document.createElement('div');
+        screenElement.className = 'station';
+        screenElement.innerHTML = `
+          <p>Codice: ${screen.id}</p>
+          <p>Posizione: ${screen.position}</p>
+          <p>Dettagli: ${screen.details}</p>
+          <div>
+            <video id="video-${screen.id}" controls>
+              ${screen.videoUrl ? `<source src="${screen.videoUrl}" type="video/mp4">` : ''}
+              Il tuo browser non supporta il formato video.
+            </video>
+            <br>
+            <label for="videoUpload-${screen.id}">Carica video</label>
+            <input type="file" id="videoUpload-${screen.id}" onchange="assignVideo(event, '${screen.id}')">
+          </div>
+        `;
+        stationElement.appendChild(screenElement);
       });
+
+      const controlButton = document.createElement('button');
+      controlButton.className = 'control-button';
+      controlButton.textContent = 'Riparti video';
+      controlButton.onclick = () => playAllVideosInStation(station.code);
+
+      stationElement.appendChild(controlButton);
+      stationsContainer.appendChild(stationElement);
     });
+  }
+
+  function assignVideo(event, screenId) {
+    const file = event.target.files[0];
+    if (file && file.type === 'video/mp4') {
+      // Caricamento su server remoto: questa parte è simulata
+      const videoUrl = URL.createObjectURL(file);
+      
+      // Salvataggio dell'URL in una struttura centralizzata (può essere un DB remoto o simile)
+      const station = predefinedStations.flatMap(station => station.screens).find(screen => screen.id === screenId);
+      if (station) {
+        station.videoUrl = videoUrl;
+        loadStations(); // Ricarica la pagina per aggiornare il video
+      }
+    } else {
+      alert('Seleziona un file video in formato .mp4');
+    }
+  }
+
+  function playAllVideosInStation(stationCode) {
+    const station = predefinedStations.find(station => station.code === stationCode);
+    if (station) {
+      station.screens.forEach(screen => {
+        const videoElement = document.getElementById(`video-${screen.id}`);
+        if (videoElement) {
+          videoElement.play(); // Avvia la riproduzione del video
+        }
+      });
+    }
   }
 </script>
 
