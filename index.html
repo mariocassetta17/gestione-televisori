@@ -80,6 +80,10 @@
       border-radius: 5px;
       margin-top: 10px;
     }
+
+    .control-button {
+      margin-top: 15px;
+    }
   </style>
 </head>
 <body>
@@ -162,7 +166,7 @@
           <p>Posizione: ${screen.position}</p>
           <p>Dettagli: ${screen.details}</p>
           <div>
-            <video controls>
+            <video id="video-${screen.id}" controls>
               ${screen.videoUrl ? `<source src="${screen.videoUrl}" type="video/mp4">` : ''}
               Il tuo browser non supporta il formato video.
             </video>
@@ -174,6 +178,12 @@
         stationElement.appendChild(screenElement);
       });
 
+      const controlButton = document.createElement('button');
+      controlButton.className = 'control-button';
+      controlButton.textContent = 'Riparti video';
+      controlButton.onclick = () => playAllVideosInStation(station.code);
+
+      stationElement.appendChild(controlButton);
       stationsContainer.appendChild(stationElement);
     });
   }
@@ -189,6 +199,18 @@
       }
     } else {
       alert('Seleziona un file video in formato .mp4');
+    }
+  }
+
+  function playAllVideosInStation(stationCode) {
+    const station = predefinedStations.find(station => station.code === stationCode);
+    if (station) {
+      station.screens.forEach(screen => {
+        const videoElement = document.getElementById(`video-${screen.id}`);
+        if (videoElement) {
+          videoElement.play(); // Avvia la riproduzione del video
+        }
+      });
     }
   }
 </script>
