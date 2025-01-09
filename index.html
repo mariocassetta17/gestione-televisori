@@ -68,10 +68,9 @@
       padding: 20px;
       z-index: 1000;
       text-align: center;
-      border-radius: 10px;
     }
 
-    .modal input, .modal select {
+    .modal input {
       margin: 10px 0;
     }
 
@@ -107,7 +106,7 @@
   <p>Inserisci il codice della sede:</p>
   <input type="text" id="addStationCode" placeholder="Codice sede">
   <button onclick="confirmAddStation()">Aggiungi</button>
-  <button onclick="closeAddModal()">Annulla</button>
+  <button onclick="closeModal('addModal')">Annulla</button>
 </div>
 
 <div id="screenModal" class="modal">
@@ -118,7 +117,7 @@
     <option value="Altro">Altro</option>
   </select>
   <button onclick="confirmScreenPosition()">Continua</button>
-  <button onclick="closeScreenModal()">Annulla</button>
+  <button onclick="closeModal('screenModal')">Annulla</button>
 </div>
 
 <div id="columnModal" class="modal">
@@ -127,7 +126,7 @@
   <input type="number" id="pump1" placeholder="Erogatore 1">
   <input type="number" id="pump2" placeholder="Erogatore 2">
   <button onclick="confirmColumnScreen()">Aggiungi</button>
-  <button onclick="closeColumnModal()">Annulla</button>
+  <button onclick="closeModal('columnModal')">Annulla</button>
 </div>
 
 <div id="otherModal" class="modal">
@@ -135,24 +134,21 @@
   <p>Posizione dello schermo:</p>
   <input type="text" id="screenOtherPosition" placeholder="Posizione">
   <button onclick="confirmOtherScreen()">Aggiungi</button>
-  <button onclick="closeOtherModal()">Annulla</button>
+  <button onclick="closeModal('otherModal')">Annulla</button>
 </div>
 
 <div id="overlay"></div>
 
 <script>
   const correctPassword = 'cassetta2';
-  const validPasswords = ['cassetta2']; // Array of valid passwords, starting with the default.
-  let stationToDelete = null;
+  let validPasswords = [correctPassword];
   let stationForScreen = null;
-
-  function generateRandomCode() {
-    return Math.random().toString(36).substring(2, 6).toUpperCase();
-  }
+  let stations = JSON.parse(localStorage.getItem('stations')) || [];
 
   function checkPassword() {
     const inputPassword = document.getElementById('password').value;
     const loginError = document.getElementById('loginError');
+
     if (validPasswords.includes(inputPassword)) {
       document.getElementById('login').style.display = 'none';
       document.getElementById('main').style.display = 'block';
@@ -163,7 +159,6 @@
   }
 
   function loadStations() {
-    const stations = JSON.parse(localStorage.getItem('stations')) || [];
     const stationsContainer = document.getElementById('stations');
     stationsContainer.innerHTML = '';
 
@@ -172,123 +167,90 @@
       stationElement.className = 'station';
       stationElement.innerHTML = `<p>${station.code}</p>`;
 
-      station.screens.forEach((screen, screenIndex) => {
-        const screenElement = document.createElement('div');
-        screenElement.innerHTML = `
-          <p>Schermo ${screenIndex + 1}: ${screen.position}</p>
-          <p>Codice: ${screen.code}</p>
-          <p>Erogatori: ${screen.pumps ? screen.pumps.join(', ') : 'N/A'}</p>
-          <button onclick="openSettingsModal(${index}, ${screenIndex})">Impostazioni</button>
-        `;
-        stationElement.appendChild(screenElement);
-      });
-
       const addScreenButton = document.createElement('button');
       addScreenButton.textContent = 'Aggiungi Schermo';
-      addScreenButton.onclick = () => openScreenModal(index);
+      addScreenButton.onclick = () => openModal('screenModal', index);
+
       stationElement.appendChild(addScreenButton);
+
+      station.screens.forEach((screen) => {
+        const screenElement = document.createElement('div');
+        screenElement.innerHTML = `
+          <p>Codice: ${screen.code}</p>
+          <p>Posizione: ${screen.position}</p>
+          <p>Dettagli: ${screen.details}</p>`;
+        stationElement.appendChild(screenElement);
+      });
 
       stationsContainer.appendChild(stationElement);
     });
   }
 
   function openAddModal() {
-    document.getElementById('addModal').style.display = 'block';
-    document.getElementById('overlay').style.display = 'block';
-  }
-
-  function closeAddModal() {
-    document.getElementById('addModal').style.display = 'none';
-    document.getElementById('overlay').style.display = 'none';
-    document.getElementById('addStationCode').value = '';
+    openModal('addModal');
   }
 
   function confirmAddStation() {
     const stationCode = document.getElementById('addStationCode').value;
     if (stationCode) {
-      addStation(stationCode);
-      closeAddModal();
+      stations.push({ code: stationCode, screens: [] });
+      localStorage.setItem('stations', JSON.stringify(stations));
+      loadStations();
+      closeModal('addModal');
     } else {
       alert('Codice della sede non inserito.');
     }
   }
 
-  function addStation(stationCode) {
-    const stations = JSON.parse(localStorage.getItem('stations')) || [];
-    stations.push({ code: stationCode, screens: [] });
-    localStorage.setItem('stations', JSON.stringify(stations));
-    loadStations();
-  }
-
-  function openScreenModal(index) {
-    stationForScreen = index;
-    document.getElementById('screenModal').style.display = 'block';
-    document.getElementById('overlay').style.display = 'block';
-  }
-
-  function closeScreenModal() {
-    document.getElementById('screenModal').style.display = 'none';
-    document.getElementById('overlay').style.display = 'none';
-  }
-
   function confirmScreenPosition() {
     const position = document.getElementById('screenPosition').value;
-    closeScreenModal();
+    closeModal('screenModal');
     if (position === 'Colonna') {
-      openColumnModal();
+      openModal('columnModal');
     } else {
-      openOtherModal();
+      openModal('otherModal');
     }
-  }
-
-  function openColumnModal() {
-    document.getElementById('columnModal').style.display = 'block';
-  }
-
-  function closeColumnModal() {
-    document.getElementById('columnModal').style.display = 'none';
-    document.getElementById('overlay').style.display = 'none';
   }
 
   function confirmColumnScreen() {
     const pump1 = document.getElementById('pump1').value;
     const pump2 = document.getElementById('pump2').value;
-    addScreen({ position: 'Colonna', pumps: [pump1, pump2] });
-    closeColumnModal();
-  }
-
-  function openOtherModal() {
-    document.getElementById('otherModal').style.display = 'block';
-    document.getElementById('overlay').style.display = 'block';
-  }
-
-  function closeOtherModal() {
-    document.getElementById('otherModal').style.display = 'none';
-    document.getElementById('overlay').style.display = 'none';
+    addScreen({ position: 'Colonna', details: `Erogatori: ${pump1}, ${pump2}` });
+    closeModal('columnModal');
   }
 
   function confirmOtherScreen() {
     const position = document.getElementById('screenOtherPosition').value;
     if (position) {
-      addScreen({ position: `Altro: ${position}` });
-      closeOtherModal();
+      addScreen({ position: `Altro: ${position}`, details: '' });
+      closeModal('otherModal');
     } else {
       alert('Inserire una posizione valida.');
     }
   }
 
   function addScreen(screen) {
-    const stations = JSON.parse(localStorage.getItem('stations')) || [];
-    const code = generateRandomCode();
+    const code = generateCode();
     screen.code = code;
     stations[stationForScreen].screens.push(screen);
-    validPasswords.push(code); // Add the screen's code to valid passwords
     localStorage.setItem('stations', JSON.stringify(stations));
+    validPasswords.push(code); // Add the new code to valid passwords
     loadStations();
   }
 
-  function openSettingsModal(stationIndex, screenIndex) {
-    // Implement settings logic here
+  function generateCode() {
+    return Math.random().toString(36).substring(2, 6).toUpperCase();
+  }
+
+  function openModal(modalId, index = null) {
+    stationForScreen = index;
+    document.getElementById(modalId).style.display = 'block';
+    document.getElementById('overlay').style.display = 'block';
+  }
+
+  function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+    document.getElementById('overlay').style.display = 'none';
   }
 </script>
 
