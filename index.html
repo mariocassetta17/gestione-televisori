@@ -16,7 +16,7 @@
       align-items: center;
       justify-content: center;
       height: 100vh;
-      overflow: hidden; /* Evita lo scroll della pagina principale */
+      overflow: hidden;
     }
 
     #login {
@@ -35,8 +35,8 @@
       display: none;
       width: 100%;
       max-width: 600px;
-      overflow-y: auto; /* Consente lo scroll verticale se il contenuto è troppo grande */
-      max-height: 90vh; /* Limita l'altezza della sezione principale */
+      overflow-y: auto;
+      max-height: 90vh;
       padding: 20px;
     }
 
@@ -61,6 +61,12 @@
       background-color: #ffffff;
       color: #1f1f1f;
     }
+
+    video {
+      width: 100%;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
@@ -78,37 +84,37 @@
 </div>
 
 <script>
-  const correctPassword = 'cassetta2'; // La password principale
+  const correctPassword = 'cassetta2';
   const predefinedStations = [
     {
       code: 's0001',
       screens: [
-        { id: '6918', position: 'Colonna', details: 'Erogatore 1 e 2' },
-        { id: '9831', position: 'Colonna', details: 'Erogatore 3 e 4' },
-        { id: '1742', position: 'Colonna', details: 'Erogatore 5 e 6' },
-        { id: '2839', position: 'Colonna', details: 'Erogatore 7 e 8' },
-        { id: '4298', position: 'Altro', details: 'Posizione ufficio' }
+        { id: '6918', position: 'Colonna', details: 'Erogatore 1 e 2', videoUrl: 'video1.mp4' },
+        { id: '9831', position: 'Colonna', details: 'Erogatore 3 e 4', videoUrl: 'video2.mp4' },
+        { id: '1742', position: 'Colonna', details: 'Erogatore 5 e 6', videoUrl: 'video3.mp4' },
+        { id: '2839', position: 'Colonna', details: 'Erogatore 7 e 8', videoUrl: 'video4.mp4' },
+        { id: '4298', position: 'Altro', details: 'Posizione ufficio', videoUrl: 'video5.mp4' }
       ]
     },
     {
       code: 's0002',
       screens: [
-        { id: '1103', position: 'Colonna', details: 'Erogatore 1 e 2' },
-        { id: '3298', position: 'Colonna', details: 'Erogatore 3 e 4' },
-        { id: '4402', position: 'Colonna', details: 'Erogatore 5 e 6' }
+        { id: '1103', position: 'Colonna', details: 'Erogatore 1 e 2', videoUrl: 'video6.mp4' },
+        { id: '3298', position: 'Colonna', details: 'Erogatore 3 e 4', videoUrl: 'video7.mp4' },
+        { id: '4402', position: 'Colonna', details: 'Erogatore 5 e 6', videoUrl: 'video8.mp4' }
       ]
     },
     {
       code: 's0003',
       screens: [
-        { id: '5618', position: 'Colonna', details: 'Erogatore 1 e 2' }
+        { id: '5618', position: 'Colonna', details: 'Erogatore 1 e 2', videoUrl: 'video9.mp4' }
       ]
     },
     {
       code: 's0004',
       screens: [
-        { id: '8720', position: 'Colonna', details: 'Erogatore 1 e 2' },
-        { id: '9431', position: 'Colonna', details: 'Erogatore 3 e 4' }
+        { id: '8720', position: 'Colonna', details: 'Erogatore 1 e 2', videoUrl: 'video10.mp4' },
+        { id: '9431', position: 'Colonna', details: 'Erogatore 3 e 4', videoUrl: 'video11.mp4' }
       ]
     }
   ];
@@ -117,13 +123,12 @@
     const inputPassword = document.getElementById('password').value;
     const loginError = document.getElementById('loginError');
 
-    // Controlliamo solo la password principale
     if (inputPassword === correctPassword) {
       document.getElementById('login').style.display = 'none';
       document.getElementById('main').style.display = 'block';
       loadStations();
     } else {
-      loginError.style.display = 'block'; // Mostra errore se la password è sbagliata
+      loginError.style.display = 'block';
     }
   }
 
@@ -143,6 +148,10 @@
           <p>Codice: ${screen.id}</p>
           <p>Posizione: ${screen.position}</p>
           <p>Dettagli: ${screen.details}</p>
+          <video controls>
+            <source src="${screen.videoUrl}" type="video/mp4">
+            Il tuo browser non supporta il formato video.
+          </video>
         `;
         stationElement.appendChild(screenElement);
       });
